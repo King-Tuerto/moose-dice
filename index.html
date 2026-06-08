@@ -323,7 +323,7 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 <div class="ov" id="ov-bust">
   <div class="ov-title">BUSTED!</div>
   <div class="ov-sub" id="bust-msg"></div>
-  <button class="btn btn-sec" onclick="afterBust()">NEXT PLAYER</button>
+  <button class="btn btn-sec" id="bust-btn" onclick="afterBust()">NEXT PLAYER</button>
 </div>
 
 <div class="ov" id="ov-hot">
@@ -616,7 +616,10 @@ function doRoll() {
       document.getElementById('bust-msg').textContent =
         `${S.players[S.cur].name} rolled no scoring dice. Turn points lost!`;
       document.getElementById('ov-bust').classList.add('show');
-      if (S.players[S.cur].isAI) setTimeout(() => { hideOvs(); afterBust(); }, 2000);
+      const bustBtn = document.getElementById('bust-btn');
+      bustBtn.disabled = true;
+      setTimeout(() => { bustBtn.disabled = false; }, 2500);
+      if (S.players[S.cur].isAI) setTimeout(() => { hideOvs(); afterBust(); }, 2500);
     } else if (S.players[S.cur].isAI) {
       aiTakeTurn();
     }
@@ -990,10 +993,11 @@ function render() {
     : '<span class="empty-msg">—</span>';
 
   // Buttons
-  const hasRollable = roll.length > 0;
-  const hasKeeper   = S.dice.some(d => d.kept);
-  const canRoll = !isAI && !S.hotRolling && !S.aiActive &&
-                  (S.rolled ? (hasRollable && hasKeeper) : hasRollable);
+  const isRolling    = S.dice.some(d => d.rolling);
+  const hasRollable  = roll.length > 0;
+  const hasNewKeeper = S.dice.some(d => d.kept && !d.locked);
+  const canRoll = !isAI && !S.hotRolling && !S.aiActive && !isRolling &&
+                  (S.rolled ? (hasRollable && hasNewKeeper) : hasRollable);
   const btnRoll = document.getElementById('btn-roll');
   btnRoll.disabled = !canRoll;
   btnRoll.textContent = !S.rolled ? 'ROLL' : `ROLL (${roll.length})`;
