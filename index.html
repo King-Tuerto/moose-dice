@@ -101,6 +101,23 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 .cp-stat-lbl{font-size:.62rem;color:var(--dim);letter-spacing:.5px;text-transform:uppercase}
 .cp-rec{font-size:.82rem;line-height:1.45;color:var(--text);padding:8px 10px;
   background:rgba(0,0,0,.2);border-radius:7px;border-left:3px solid var(--coach)}
+/* tooltip */
+.tip{position:relative;display:inline-flex;align-items:center;gap:3px}
+.tip-i{display:inline-flex;align-items:center;justify-content:center;
+  width:13px;height:13px;border-radius:50%;border:1px solid var(--dim);
+  color:var(--dim);font-size:.55rem;font-style:normal;cursor:pointer;
+  font-weight:700;line-height:1;flex-shrink:0;user-select:none}
+.tip-i:hover,.tip-i:focus{border-color:var(--coach);color:var(--coach);outline:none}
+.tip-box{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;
+  transform:translateX(-50%);background:#1e2d4a;border:1px solid rgba(56,189,248,.3);
+  color:var(--text);font-size:.72rem;line-height:1.45;padding:7px 10px;
+  border-radius:7px;white-space:normal;width:210px;z-index:200;
+  box-shadow:0 4px 16px rgba(0,0,0,.5);pointer-events:none}
+.tip-box::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:#1e2d4a}
+.tip-i:hover + .tip-box,
+.tip-i:focus + .tip-box,
+.tip-i.open + .tip-box{display:block}
 
 /* zones */
 .zone{background:var(--surface);border-radius:11px;padding:11px 13px;min-height:92px}
@@ -805,7 +822,7 @@ function renderCoach() {
     </div>
     <div class="cp-stat">
       <div class="cp-stat-val">${d.nRoll > 0 ? '~'+d.ev.toLocaleString() : '—'}</div>
-      <div class="cp-stat-lbl">Roll EV</div>
+      <div class="cp-stat-lbl tip">ROLL EV <i class="tip-i" tabindex="0" onclick="this.classList.toggle('open')">i</i><span class="tip-box">Average score if you roll — calculated as (1 − bust%) × (your score + avg gain from remaining dice). If your score beats this number, banking is the safer play.</span></div>
     </div>`;
 
   document.getElementById('cp-rec').textContent = d.rec;
