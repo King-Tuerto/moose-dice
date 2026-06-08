@@ -355,8 +355,17 @@ function doRoll() {
   }, 420);
 }
 
-// Returns true if keeping this die would increase the score in the full current context
+// Returns true if this die can legally be moved to the kept zone.
+// Rule: the kept set must contain at least 1 scoring die. Once that's satisfied,
+// any die can be added (e.g. keep a 6 alongside scoring dice, chasing pairs/triples).
+// If the kept set has no scoring dice yet, this die must contribute to score
+// in the context of all current dice (locked + kept + full roll zone).
 function canKeepDie(die) {
+  // If the kept set already has scoring dice, any die is allowed
+  const keptVals = S.dice.filter(d => d.kept).map(d => d.val);
+  if (scoreSet(keptVals) > 0) return true;
+
+  // No scoring dice yet — this die must contribute in the full roll context
   const lockedVals      = S.dice.filter(d => d.locked).map(d => d.val);
   const unlockedKeptVals= S.dice.filter(d => d.kept && !d.locked).map(d => d.val);
   const rollVals        = S.dice.filter(d => !d.kept).map(d => d.val); // includes die
