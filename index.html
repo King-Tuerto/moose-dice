@@ -461,6 +461,18 @@ function scoreDesc(vals) {
   return parts.join(' · ') || '';
 }
 
+// Order-aware scoring: locked dice from prior rolls + newly kept dice this roll.
+// Triples only combine across batches if locked already has 3+ of that face.
+function scoreBatched(lockedVals, newKeptVals) {
+  if (!newKeptVals.length) return scoreSet(lockedVals);
+  const lc = Array(7).fill(0);
+  lockedVals.forEach(v => lc[v]++);
+  const combined = [...lockedVals];
+  const indep    = [];
+  newKeptVals.forEach(v => { lc[v] >= 3 ? combined.push(v) : indep.push(v); });
+  return scoreSet(combined) + scoreSet(indep);
+}
+
 // ════════════════════════════════
 // STATE
 // ════════════════════════════════
@@ -615,7 +627,7 @@ function doRoll() {
     const rolledVals = S.dice.filter(d => !d.kept).map(d => d.val);
     const combined   = [...lockedVals, ...rolledVals];
 
-    if (scoreSet(combined) <= scoreSet(lockedVals)) {
+    if (scoreBatched(lockedVals, rolledVals) <= scoreSet(lockedVals)) {
       document.getElementById('bust-msg').textContent =
         `${S.players[S.cur].name} rolled no scoring dice. Turn points lost!`;
       document.getElementById('bust-dice').innerHTML =
@@ -635,15 +647,14 @@ function doRoll() {
 // HUMAN INPUT
 // ════════════════════════════════
 function canKeepDie(die) {
-  const keptVals = S.dice.filter(d => d.kept).map(d => d.val);
-  if (scoreSet(keptVals) > 0) return true;
-  const lockedVals       = S.dice.filter(d => d.locked).map(d => d.val);
-  const unlockedKeptVals = S.dice.filter(d => d.kept && !d.locked).map(d => d.val);
-  const rollVals         = S.dice.filter(d => !d.kept).map(d => d.val);
-  const rollValsWithout  = S.dice.filter(d => !d.kept && d.id !== die.id).map(d => d.val);
-  const allVals    = [...lockedVals, ...unlockedKeptVals, ...rollVals];
-  const withoutDie = [...lockedVals, ...unlockedKeptVals, ...rollValsWithout];
-  return scoreSet(allVals) > scoreSet(withoutDie);
+  const locked  = S.dice.filter(d => d.locked).map(d => d.val);
+  const newKept = S.dice.filter(d => d.kept && !d.locked).map(d => d.val);
+  const rollAll     = S.dice.filter(d => !d.kept).map(d => d.val);
+  const rollWithout = S.dice.filter(d => !d.kept && d.id !== die.id).map(d => d.val);
+  // Does keeping this die (given potential full-roll context) add to the score?
+  const withAll    = scoreBatched(locked, [...newKept, ...rollAll]);
+  const withoutDie = scoreBatched(locked, [...newKept, ...rollWithout]);
+  return withAll > withoutDie;
 }
 
 function shakeEl(id) {
@@ -688,8 +699,7 @@ function afterBust() {
 }
 
 function doHotRoll() {
-  const kv = S.dice.filter(d => d.kept).map(d => d.val);
-  S.carry += scoreSet(kv);
+  S.carry = turnScore();
   S.dice = mkDice();
   S.rolled = false;
   S.hotRolling = true;
@@ -784,15 +794,15 @@ function aiChooseKeeps(level, lockedVals, rollDice) {
   let bestIds   = [];
 
   for (let mask = 1; mask < (1 << n); mask++) {
-    const subset   = rollDice.filter((_, i) => mask & (1 << i));
-    const combined = [...lockedVals, ...subset.map(d => d.val)];
-    const s = scoreSet(combined);
+    const subset    = rollDice.filter((_, i) => mask & (1 << i));
+    const subsetVals = subset.map(d => d.val);
+    const s = scoreBatched(lockedVals, subsetVals);
     if (s > bestScore) { bestScore = s; bestIds = subset.map(d => d.id); }
   }
 
   if (level !== 'rookie' && bestIds.length > 0) {
     const keptVals = bestIds.map(id => rollDice.find(d => d.id === id).val);
-    if (scoreSet([...lockedVals, ...keptVals]) > 0) {
+    if (scoreBatched(lockedVals, keptVals) > 0) {
       const lockedC = Array(7).fill(0);
       lockedVals.forEach(v => lockedC[v]++);
       const keptC = Array(7).fill(0);
@@ -912,8 +922,9 @@ function renderCoach() {
 // HELPERS
 // ════════════════════════════════
 function turnScore() {
-  const kv = S.dice.filter(d => d.kept).map(d => d.val);
-  return S.carry + scoreSet(kv);
+  const locked  = S.dice.filter(d => d.locked).map(d => d.val);
+  const newKept = S.dice.filter(d => d.kept && !d.locked).map(d => d.val);
+  return S.carry + scoreBatched(locked, newKept);
 }
 
 function bankOk(p, ts) {
