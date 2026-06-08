@@ -21,7 +21,7 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 
 /* ── SETUP ── */
 #setup{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:12px}
-.moose-logo{width:170px;height:auto;margin-bottom:2px}
+.moose-logo{width:min(300px,95%);height:auto;margin-bottom:2px}
 .plist{width:100%;display:flex;flex-direction:column;gap:8px}
 .prow{display:flex;gap:6px;align-items:center}
 .prow input[type=text]{flex:1;background:var(--surface);border:1px solid #333;color:var(--text);
@@ -192,52 +192,77 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 
 <!-- ═══ SETUP ═══ -->
 <div id="setup">
-  <svg class="moose-logo" viewBox="0 0 260 222" xmlns="http://www.w3.org/2000/svg" aria-label="Moose Dice mascot">
-    <!-- antlers left -->
-    <g stroke="#5C3317" stroke-width="6.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M 104,76 C 96,58 82,40 68,20"/>
-      <path d="M 84,48 C 73,50 58,52 48,45"/>
-      <path d="M 75,33 C 66,24 58,14 52,8"/>
-      <path d="M 80,40 C 71,34 63,25 59,16"/>
-    </g>
-    <!-- antlers right -->
-    <g stroke="#5C3317" stroke-width="6.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M 156,76 C 164,58 178,40 192,20"/>
-      <path d="M 176,48 C 187,50 202,52 212,45"/>
-      <path d="M 185,33 C 194,24 202,14 208,8"/>
-      <path d="M 180,40 C 189,34 197,25 201,16"/>
-    </g>
-    <!-- body -->
-    <ellipse cx="130" cy="160" rx="52" ry="30" fill="#8B5A2B"/>
-    <!-- neck -->
-    <rect x="113" y="123" width="34" height="34" rx="11" fill="#8B5A2B"/>
-    <!-- head -->
-    <ellipse cx="130" cy="96" rx="43" ry="38" fill="#8B5A2B"/>
-    <!-- ears -->
-    <ellipse cx="91" cy="82" rx="10" ry="16" fill="#8B5A2B" transform="rotate(-25 91 82)"/>
-    <ellipse cx="92" cy="82" rx="6" ry="10" fill="#C4956A" transform="rotate(-25 92 82)"/>
-    <ellipse cx="169" cy="82" rx="10" ry="16" fill="#8B5A2B" transform="rotate(25 169 82)"/>
-    <ellipse cx="168" cy="82" rx="6" ry="10" fill="#C4956A" transform="rotate(25 168 82)"/>
-    <!-- eyes -->
-    <circle cx="115" cy="87" r="9" fill="white"/>
-    <circle cx="145" cy="87" r="9" fill="white"/>
-    <circle cx="116" cy="87" r="5" fill="#1a1a2e"/>
-    <circle cx="146" cy="87" r="5" fill="#1a1a2e"/>
-    <circle cx="114" cy="85" r="2.5" fill="white"/>
-    <circle cx="144" cy="85" r="2.5" fill="white"/>
-    <!-- snout -->
-    <ellipse cx="130" cy="118" rx="22" ry="14" fill="#C4956A"/>
-    <!-- nostrils -->
-    <ellipse cx="123" cy="121" rx="4" ry="3" fill="#5C3317"/>
-    <ellipse cx="137" cy="121" rx="4" ry="3" fill="#5C3317"/>
-    <!-- smile -->
-    <path d="M 120,128 Q 130,135 140,128" stroke="#5C3317" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <!-- big balls -->
-    <ellipse cx="130" cy="190" rx="30" ry="12" fill="#6B3A18" opacity="0.5"/>
-    <circle cx="111" cy="197" r="23" fill="#7A4220"/>
-    <circle cx="149" cy="197" r="23" fill="#7A4220"/>
-    <ellipse cx="105" cy="190" rx="8" ry="5.5" fill="#A06030" opacity="0.55"/>
-    <ellipse cx="143" cy="190" rx="8" ry="5.5" fill="#A06030" opacity="0.55"/>
+  <svg class="moose-logo" viewBox="0 0 420 308" xmlns="http://www.w3.org/2000/svg" aria-label="Moose Dice mascot">
+
+    <!-- PALMATE ANTLER — 5 irregular tines, thick palm, proper moose shape -->
+    <path d="M 107,74
+             C 113,60 122,46 130,36
+             C 135,28 142,22 152,18
+             L 148,4   C 154,12 164,18 174,18
+             L 172,7   C 178,14 190,17 202,17
+             L 198,3   C 206,12 218,15 230,15
+             L 227,8   C 234,13 246,14 258,16
+             L 255,4   C 262,12 268,18 272,24
+             L 268,32
+             C 258,37 244,38 228,36
+             L 210,34 L 192,36 L 174,33 L 158,35 L 143,38
+             C 136,43 130,53 120,64
+             C 116,68 110,72 107,74 Z"
+          fill="#4A2810"/>
+    <!-- brow tine (forward/left) -->
+    <path d="M 115,65 C 104,57 90,54 78,56 C 87,62 100,67 116,73" fill="#4A2810"/>
+
+    <!-- FAR FRONT LEG -->
+    <rect x="168" y="238" width="14" height="56" rx="5" fill="#3E2010"/>
+    <!-- FAR BACK LEG (wider apart so balls sit between) -->
+    <polygon points="345,242 360,242 364,266 351,278 355,293 338,293 333,278 336,266" fill="#3E2010"/>
+    <!-- hooves far -->
+    <ellipse cx="175" cy="294" rx="9"  ry="4" fill="#1E1008"/>
+    <ellipse cx="347" cy="293" rx="10" ry="4" fill="#1E1008"/>
+
+    <!-- MAIN BODY -->
+    <ellipse cx="228" cy="178" rx="118" ry="68" fill="#6B4025"/>
+    <!-- SHOULDER HUMP (moose characteristic) -->
+    <ellipse cx="148" cy="128" rx="52"  ry="33" fill="#6B4025"/>
+    <!-- TAIL -->
+    <ellipse cx="357" cy="165" rx="11"  ry="9"  fill="#7A5030"/>
+
+    <!-- NEAR FRONT LEG -->
+    <rect x="148" y="236" width="16" height="58" rx="5" fill="#5A3818"/>
+    <!-- hooves near front -->
+    <ellipse cx="156" cy="294" rx="10" ry="4" fill="#1E1008"/>
+
+    <!-- BIG BALLS — hang low, drawn BEFORE near hind leg so leg frames them -->
+    <circle cx="302" cy="272" r="28" fill="#5A3010"/>
+    <circle cx="346" cy="272" r="28" fill="#5A3010"/>
+    <ellipse cx="295" cy="263" rx="9" ry="7" fill="#7A4A2A" opacity="0.45"/>
+    <ellipse cx="339" cy="263" rx="9" ry="7" fill="#7A4A2A" opacity="0.45"/>
+
+    <!-- NEAR BACK LEG — drawn after balls so it frames left ball -->
+    <polygon points="285,240 300,240 305,265 292,276 296,293 280,293 275,276 278,265" fill="#5A3818"/>
+    <!-- hooves near back -->
+    <ellipse cx="288" cy="293" rx="10" ry="4" fill="#1E1008"/>
+
+    <!-- NECK -->
+    <polygon points="100,108 135,92 156,130 120,148" fill="#6B4025"/>
+    <!-- HEAD -->
+    <ellipse cx="82" cy="107" rx="40" ry="26" fill="#6B4025"/>
+    <!-- EAR -->
+    <ellipse cx="108" cy="88"  rx="10" ry="18" fill="#6B4025" transform="rotate(-12 108 88)"/>
+    <ellipse cx="108" cy="89"  rx="6"  ry="11" fill="#C4956A" transform="rotate(-12 108 89)"/>
+    <!-- DEWLAP (throat flap) -->
+    <ellipse cx="91"  cy="136" rx="8"  ry="15" fill="#6B4025"/>
+    <!-- MUZZLE (drooping bulbous moose nose) -->
+    <ellipse cx="52"  cy="122" rx="24" ry="20" fill="#7A5030"/>
+    <!-- upper lip overhang -->
+    <path d="M 30,118 Q 42,132 66,128 Q 76,126 80,120" fill="#7A5030"/>
+    <!-- EYE -->
+    <circle cx="70"  cy="100" r="7"   fill="white"/>
+    <circle cx="71"  cy="100" r="4.5" fill="#1a1a2e"/>
+    <circle cx="69"  cy="98"  r="2"   fill="white"/>
+    <!-- NOSTRIL -->
+    <ellipse cx="34"  cy="127" rx="4" ry="3" fill="#4A2810"/>
+
   </svg>
   <h1>MOOSE DICE</h1>
   <div class="sub">FIRST TO 10,000</div>
