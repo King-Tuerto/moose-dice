@@ -421,7 +421,6 @@ function scoreSet(vals) {
   const c = Array(7).fill(0);
   vals.forEach(v => c[v]++);
   if (vals.length === 6 && c.slice(1).every(x => x === 1)) return 1500;
-  if (vals.length === 6 && c.filter(x => x === 2).length === 3) return 1000;
   let score = 0;
   for (let f = 1; f <= 6; f++) {
     const n = c[f];
@@ -434,6 +433,9 @@ function scoreSet(vals) {
       if (f === 5) score += n * 50;
     }
   }
+  // Three pairs: all 6 dice pair up (every face count is even, max 4 so six-of-a-kind still scores higher)
+  if (vals.length === 6 && c.slice(1).every(x => x % 2 === 0) && Math.max(...c.slice(1)) <= 4)
+    score = Math.max(score, 1000);
   return score;
 }
 
@@ -442,7 +444,7 @@ function scoreDesc(vals) {
   const c = Array(7).fill(0);
   vals.forEach(v => c[v]++);
   if (vals.length === 6 && c.slice(1).every(x => x === 1)) return 'Straight = 1,500';
-  if (vals.length === 6 && c.filter(x => x === 2).length === 3) return '3 Pairs = 1,000';
+  if (vals.length === 6 && c.slice(1).every(x => x % 2 === 0) && Math.max(...c.slice(1)) <= 4) return '3 Pairs = 1,000';
   const parts = [];
   for (let f = 1; f <= 6; f++) {
     const n = c[f];
