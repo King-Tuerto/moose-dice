@@ -20,7 +20,8 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 .sub{color:var(--dim);font-size:.75rem;letter-spacing:3px;margin-bottom:16px}
 
 /* ── SETUP ── */
-#setup{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:40px}
+#setup{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:12px}
+.moose-logo{width:170px;height:auto;margin-bottom:2px}
 .plist{width:100%;display:flex;flex-direction:column;gap:8px}
 .prow{display:flex;gap:6px;align-items:center}
 .prow input[type=text]{flex:1;background:var(--surface);border:1px solid #333;color:var(--text);
@@ -191,6 +192,53 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 
 <!-- ═══ SETUP ═══ -->
 <div id="setup">
+  <svg class="moose-logo" viewBox="0 0 260 222" xmlns="http://www.w3.org/2000/svg" aria-label="Moose Dice mascot">
+    <!-- antlers left -->
+    <g stroke="#5C3317" stroke-width="6.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M 104,76 C 96,58 82,40 68,20"/>
+      <path d="M 84,48 C 73,50 58,52 48,45"/>
+      <path d="M 75,33 C 66,24 58,14 52,8"/>
+      <path d="M 80,40 C 71,34 63,25 59,16"/>
+    </g>
+    <!-- antlers right -->
+    <g stroke="#5C3317" stroke-width="6.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M 156,76 C 164,58 178,40 192,20"/>
+      <path d="M 176,48 C 187,50 202,52 212,45"/>
+      <path d="M 185,33 C 194,24 202,14 208,8"/>
+      <path d="M 180,40 C 189,34 197,25 201,16"/>
+    </g>
+    <!-- body -->
+    <ellipse cx="130" cy="160" rx="52" ry="30" fill="#8B5A2B"/>
+    <!-- neck -->
+    <rect x="113" y="123" width="34" height="34" rx="11" fill="#8B5A2B"/>
+    <!-- head -->
+    <ellipse cx="130" cy="96" rx="43" ry="38" fill="#8B5A2B"/>
+    <!-- ears -->
+    <ellipse cx="91" cy="82" rx="10" ry="16" fill="#8B5A2B" transform="rotate(-25 91 82)"/>
+    <ellipse cx="92" cy="82" rx="6" ry="10" fill="#C4956A" transform="rotate(-25 92 82)"/>
+    <ellipse cx="169" cy="82" rx="10" ry="16" fill="#8B5A2B" transform="rotate(25 169 82)"/>
+    <ellipse cx="168" cy="82" rx="6" ry="10" fill="#C4956A" transform="rotate(25 168 82)"/>
+    <!-- eyes -->
+    <circle cx="115" cy="87" r="9" fill="white"/>
+    <circle cx="145" cy="87" r="9" fill="white"/>
+    <circle cx="116" cy="87" r="5" fill="#1a1a2e"/>
+    <circle cx="146" cy="87" r="5" fill="#1a1a2e"/>
+    <circle cx="114" cy="85" r="2.5" fill="white"/>
+    <circle cx="144" cy="85" r="2.5" fill="white"/>
+    <!-- snout -->
+    <ellipse cx="130" cy="118" rx="22" ry="14" fill="#C4956A"/>
+    <!-- nostrils -->
+    <ellipse cx="123" cy="121" rx="4" ry="3" fill="#5C3317"/>
+    <ellipse cx="137" cy="121" rx="4" ry="3" fill="#5C3317"/>
+    <!-- smile -->
+    <path d="M 120,128 Q 130,135 140,128" stroke="#5C3317" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <!-- big balls -->
+    <ellipse cx="130" cy="190" rx="30" ry="12" fill="#6B3A18" opacity="0.5"/>
+    <circle cx="111" cy="197" r="23" fill="#7A4220"/>
+    <circle cx="149" cy="197" r="23" fill="#7A4220"/>
+    <ellipse cx="105" cy="190" rx="8" ry="5.5" fill="#A06030" opacity="0.55"/>
+    <ellipse cx="143" cy="190" rx="8" ry="5.5" fill="#A06030" opacity="0.55"/>
+  </svg>
   <h1>MOOSE DICE</h1>
   <div class="sub">FIRST TO 10,000</div>
   <div class="plist" id="plist"></div>
