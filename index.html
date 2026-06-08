@@ -9,7 +9,8 @@
 :root{
   --bg:#1a1a2e;--surface:#16213e;--card:#0f3460;
   --accent:#e94560;--green:#2ecc71;--green-dk:#219a52;
-  --gold:#f5a623;--text:#eee;--dim:#888;
+  --gold:#f5a623;--text:#eee;--dim:#888;--robot:#818cf8;
+  --coach:#38bdf8;
   --die:70px;--rad:10px;
 }
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;
@@ -19,13 +20,24 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 .sub{color:var(--dim);font-size:.75rem;letter-spacing:3px;margin-bottom:16px}
 
 /* ── SETUP ── */
-#setup{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:40px}
+#setup{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:12px}
+.moose-logo{width:90px;height:auto;margin-bottom:2px}
 .plist{width:100%;display:flex;flex-direction:column;gap:8px}
-.prow{display:flex;gap:8px;align-items:center}
-.prow input{flex:1;background:var(--surface);border:1px solid #333;color:var(--text);
-  padding:10px 13px;border-radius:8px;font-size:.95rem;outline:none;transition:border .15s}
-.prow input:focus{border-color:var(--gold)}
-.prow input::placeholder{color:#555}
+.prow{display:flex;gap:6px;align-items:center}
+.prow input[type=text]{flex:1;background:var(--surface);border:1px solid #333;color:var(--text);
+  padding:10px 13px;border-radius:8px;font-size:.95rem;outline:none;transition:border .15s;min-width:0}
+.prow input[type=text]:focus{border-color:var(--gold)}
+.prow input[type=text]::placeholder{color:#555}
+.prow input[type=text]:disabled{opacity:.5;cursor:default}
+.ai-pill{display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid #333;
+  border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:border .15s}
+.ai-pill:hover{border-color:var(--robot)}
+.ai-pill .ai-check{font-size:.8rem;color:var(--dim);line-height:1}
+.ai-pill.on{border-color:var(--robot);background:rgba(129,140,248,.1)}
+.ai-pill.on .ai-check{color:var(--robot)}
+.ai-lvl{background:var(--surface);border:1px solid var(--robot);color:var(--robot);
+  border-radius:8px;padding:6px 8px;font-size:.8rem;font-weight:700;cursor:pointer;
+  letter-spacing:.5px;outline:none;flex-shrink:0}
 .btn-x{background:none;border:1px solid #444;color:#666;width:34px;height:34px;border-radius:6px;
   cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .btn-x:hover{border-color:var(--accent);color:var(--accent)}
@@ -43,6 +55,7 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 /* ── GAME ── */
 #game{width:100%;max-width:560px;display:none;flex-direction:column;gap:11px}
 .g-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.g-top-btns{display:flex;gap:8px}
 
 /* scoreboard */
 #sb{background:var(--surface);border-radius:11px;padding:11px 14px}
@@ -58,6 +71,7 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 .b-open{background:rgba(233,69,96,.15);color:var(--accent)}
 .b-on{background:rgba(46,204,113,.15);color:var(--green)}
 .b-lead{background:rgba(245,166,35,.2);color:var(--gold)}
+.b-ai{background:rgba(129,140,248,.15);color:var(--robot);margin-left:-4px}
 
 /* final banner */
 #fb{display:none;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);
@@ -66,10 +80,45 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 
 /* turn info */
 #ti{background:var(--surface);border-radius:11px;padding:13px 15px}
-.tname{font-size:1.15rem;font-weight:700;color:var(--gold);margin-bottom:3px}
+.tname{font-size:1.15rem;font-weight:700;color:var(--gold);margin-bottom:3px;display:flex;align-items:center;gap:8px}
 .tscore{font-size:2.1rem;font-weight:900;letter-spacing:-1px;line-height:1}
 .tmeta{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px;font-size:.75rem;color:var(--dim)}
 .ok{color:var(--green)} .no{color:var(--accent)} .carry{color:var(--gold)}
+.thinking{color:var(--robot);animation:blink 0.9s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* coach panel */
+#coach-panel{background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.25);
+  border-radius:11px;padding:13px 15px;display:none;flex-direction:column;gap:9px}
+#coach-panel.show{display:flex}
+.cp-head{display:flex;align-items:center;justify-content:space-between}
+.cp-title{font-size:.65rem;letter-spacing:2px;color:var(--coach);font-weight:700;text-transform:uppercase}
+.cp-toggle{background:none;border:1px solid rgba(56,189,248,.35);color:var(--coach);
+  border-radius:6px;padding:3px 9px;font-size:.7rem;cursor:pointer;letter-spacing:.5px}
+.cp-toggle:hover{background:rgba(56,189,248,.1)}
+.cp-stats{display:flex;gap:16px;flex-wrap:wrap}
+.cp-stat{display:flex;flex-direction:column;gap:2px}
+.cp-stat-val{font-size:1.1rem;font-weight:800;color:var(--text)}
+.cp-stat-lbl{font-size:.62rem;color:var(--dim);letter-spacing:.5px;text-transform:uppercase}
+.cp-rec{font-size:.82rem;line-height:1.45;color:var(--text);padding:8px 10px;
+  background:rgba(0,0,0,.2);border-radius:7px;border-left:3px solid var(--coach)}
+/* tooltip */
+.tip{position:relative;display:inline-flex;align-items:center;gap:3px}
+.tip-i{display:inline-flex;align-items:center;justify-content:center;
+  width:13px;height:13px;border-radius:50%;border:1px solid var(--dim);
+  color:var(--dim);font-size:.55rem;font-style:normal;cursor:pointer;
+  font-weight:700;line-height:1;flex-shrink:0;user-select:none}
+.tip-i:hover,.tip-i:focus{border-color:var(--coach);color:var(--coach);outline:none}
+.tip-box{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;
+  transform:translateX(-50%);background:#1e2d4a;border:1px solid rgba(56,189,248,.3);
+  color:var(--text);font-size:.72rem;line-height:1.45;padding:7px 10px;
+  border-radius:7px;white-space:normal;width:210px;z-index:200;
+  box-shadow:0 4px 16px rgba(0,0,0,.5);pointer-events:none}
+.tip-box::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:#1e2d4a}
+.tip-i:hover + .tip-box,
+.tip-i:focus + .tip-box,
+.tip-i.open + .tip-box{display:block}
 
 /* zones */
 .zone{background:var(--surface);border-radius:11px;padding:11px 13px;min-height:92px}
@@ -100,7 +149,7 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 #acts{display:flex;gap:11px}
 #acts .btn{flex:1;padding:15px;font-size:1rem}
 
-/* overlays */
+/* ── OVERLAYS ── */
 .ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);
   align-items:center;justify-content:center;flex-direction:column;
   gap:18px;z-index:100;text-align:center;padding:28px}
@@ -108,7 +157,27 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 .ov-title{font-size:3rem;font-weight:900;letter-spacing:4px;line-height:1}
 .ov-sub{font-size:1rem;color:var(--dim);max-width:300px;line-height:1.5}
 #ov-bust .ov-title{color:var(--accent)}
-#ov-hot .ov-title,.ov-final .ov-title,#ov-win .ov-title{color:var(--gold)}
+#ov-hot .ov-title,#ov-final .ov-title,#ov-win .ov-title{color:var(--gold)}
+
+/* help overlay */
+#ov-help{overflow-y:auto;align-items:flex-start;text-align:left;padding:24px 20px}
+.help-wrap{width:100%;max-width:480px;display:flex;flex-direction:column;gap:18px;margin:0 auto}
+.help-close{align-self:flex-end;background:none;border:1px solid #444;color:var(--dim);
+  border-radius:7px;padding:6px 14px;font-size:.85rem;cursor:pointer;margin-bottom:4px}
+.help-close:hover{border-color:var(--gold);color:var(--gold)}
+.help-section{background:var(--surface);border-radius:11px;padding:14px 16px}
+.help-section h2{font-size:.65rem;letter-spacing:3px;color:var(--gold);text-transform:uppercase;
+  margin-bottom:11px;font-weight:700}
+.help-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.help-table td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:top}
+.help-table td:first-child{color:var(--dim);white-space:nowrap;padding-right:12px;width:46%}
+.help-table td:last-child{color:var(--text);font-weight:600}
+.help-table tr:last-child td{border-bottom:none}
+.help-note{font-size:.78rem;color:var(--dim);line-height:1.55;margin-top:8px}
+.bust-bar{display:flex;align-items:center;gap:9px;margin:4px 0}
+.bust-bar-label{font-size:.8rem;color:var(--dim);width:60px;flex-shrink:0}
+.bust-bar-fill{height:10px;border-radius:5px;background:var(--accent);transition:width .3s;min-width:4px}
+.bust-bar-pct{font-size:.78rem;color:var(--text);font-weight:700;min-width:36px}
 
 /* responsive */
 @media(max-width:420px){
@@ -123,6 +192,78 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 
 <!-- ═══ SETUP ═══ -->
 <div id="setup">
+  <svg class="moose-logo" viewBox="0 0 420 308" xmlns="http://www.w3.org/2000/svg" aria-label="Moose Dice mascot">
+
+    <!-- PALMATE ANTLER — 5 irregular tines, thick palm, proper moose shape -->
+    <path d="M 107,74
+             C 113,60 122,46 130,36
+             C 135,28 142,22 152,18
+             L 148,4   C 154,12 164,18 174,18
+             L 172,7   C 178,14 190,17 202,17
+             L 198,3   C 206,12 218,15 230,15
+             L 227,8   C 234,13 246,14 258,16
+             L 255,4   C 262,12 268,18 272,24
+             L 268,32
+             C 258,37 244,38 228,36
+             L 210,34 L 192,36 L 174,33 L 158,35 L 143,38
+             C 136,43 130,53 120,64
+             C 116,68 110,72 107,74 Z"
+          fill="#4A2810"/>
+    <!-- brow tine (forward/left) -->
+    <path d="M 115,65 C 104,57 90,54 78,56 C 87,62 100,67 116,73" fill="#4A2810"/>
+
+    <!-- FAR FRONT LEG -->
+    <rect x="168" y="238" width="14" height="56" rx="5" fill="#3E2010"/>
+    <!-- FAR BACK LEG (wider apart so balls sit between) -->
+    <polygon points="345,242 360,242 364,266 351,278 355,293 338,293 333,278 336,266" fill="#3E2010"/>
+    <!-- hooves far -->
+    <ellipse cx="175" cy="294" rx="9"  ry="4" fill="#1E1008"/>
+    <ellipse cx="347" cy="293" rx="10" ry="4" fill="#1E1008"/>
+
+    <!-- MAIN BODY -->
+    <ellipse cx="228" cy="178" rx="118" ry="68" fill="#6B4025"/>
+    <!-- SHOULDER HUMP (moose characteristic) -->
+    <ellipse cx="148" cy="128" rx="52"  ry="33" fill="#6B4025"/>
+    <!-- TAIL -->
+    <ellipse cx="357" cy="165" rx="11"  ry="9"  fill="#7A5030"/>
+
+    <!-- NEAR FRONT LEG -->
+    <rect x="148" y="236" width="16" height="58" rx="5" fill="#5A3818"/>
+    <!-- hooves near front -->
+    <ellipse cx="156" cy="294" rx="10" ry="4" fill="#1E1008"/>
+
+    <!-- BIG BALLS — hang low, drawn BEFORE near hind leg so leg frames them -->
+    <circle cx="302" cy="272" r="28" fill="#5A3010"/>
+    <circle cx="346" cy="272" r="28" fill="#5A3010"/>
+    <ellipse cx="295" cy="263" rx="9" ry="7" fill="#7A4A2A" opacity="0.45"/>
+    <ellipse cx="339" cy="263" rx="9" ry="7" fill="#7A4A2A" opacity="0.45"/>
+
+    <!-- NEAR BACK LEG — drawn after balls so it frames left ball -->
+    <polygon points="285,240 300,240 305,265 292,276 296,293 280,293 275,276 278,265" fill="#5A3818"/>
+    <!-- hooves near back -->
+    <ellipse cx="288" cy="293" rx="10" ry="4" fill="#1E1008"/>
+
+    <!-- NECK -->
+    <polygon points="100,108 135,92 156,130 120,148" fill="#6B4025"/>
+    <!-- HEAD -->
+    <ellipse cx="82" cy="107" rx="40" ry="26" fill="#6B4025"/>
+    <!-- EAR -->
+    <ellipse cx="108" cy="88"  rx="10" ry="18" fill="#6B4025" transform="rotate(-12 108 88)"/>
+    <ellipse cx="108" cy="89"  rx="6"  ry="11" fill="#C4956A" transform="rotate(-12 108 89)"/>
+    <!-- DEWLAP (throat flap) -->
+    <ellipse cx="91"  cy="136" rx="8"  ry="15" fill="#6B4025"/>
+    <!-- MUZZLE (drooping bulbous moose nose) -->
+    <ellipse cx="52"  cy="122" rx="24" ry="20" fill="#7A5030"/>
+    <!-- upper lip overhang -->
+    <path d="M 30,118 Q 42,132 66,128 Q 76,126 80,120" fill="#7A5030"/>
+    <!-- EYE -->
+    <circle cx="70"  cy="100" r="7"   fill="white"/>
+    <circle cx="71"  cy="100" r="4.5" fill="#1a1a2e"/>
+    <circle cx="69"  cy="98"  r="2"   fill="white"/>
+    <!-- NOSTRIL -->
+    <ellipse cx="34"  cy="127" rx="4" ry="3" fill="#4A2810"/>
+
+  </svg>
   <h1>MOOSE DICE</h1>
   <div class="sub">FIRST TO 10,000</div>
   <div class="plist" id="plist"></div>
@@ -130,13 +271,17 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
     <button class="btn btn-sec" style="flex:1" onclick="addPlayer()">+ Add Player</button>
     <button class="btn btn-pri" style="flex:1" id="btn-start" onclick="startGame()" disabled>START</button>
   </div>
+  <button class="btn btn-sec" style="width:100%;margin-top:4px" onclick="showHelp()">📖 How to Play / Scoring</button>
 </div>
 
 <!-- ═══ GAME ═══ -->
 <div id="game">
   <div class="g-top">
     <h1 style="font-size:1.3rem;letter-spacing:4px">MOOSE DICE</h1>
-    <button class="btn btn-sec" style="padding:6px 12px;font-size:.75rem" onclick="newGame()">NEW GAME</button>
+    <div class="g-top-btns">
+      <button class="btn btn-sec" style="padding:6px 11px;font-size:.75rem" onclick="showHelp()">📖 Rules</button>
+      <button class="btn btn-sec" style="padding:6px 11px;font-size:.75rem" onclick="newGame()">NEW GAME</button>
+    </div>
   </div>
   <div id="fb"></div>
   <div id="sb"></div>
@@ -147,6 +292,14 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
       <div style="font-size:.72rem;color:var(--dim)">THIS TURN</div>
     </div>
     <div class="tmeta" id="tmeta"></div>
+  </div>
+  <div id="coach-panel">
+    <div class="cp-head">
+      <div class="cp-title">🎓 Coach</div>
+      <button class="cp-toggle" onclick="S.coach=false;render()">Hide Coach</button>
+    </div>
+    <div class="cp-stats" id="cp-stats"></div>
+    <div class="cp-rec" id="cp-rec"></div>
   </div>
   <div class="zone">
     <div class="zlabel">Kept</div>
@@ -159,6 +312,10 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
   <div id="acts">
     <button class="btn btn-sec" id="btn-roll" onclick="doRoll()">ROLL</button>
     <button class="btn btn-bank" id="btn-bank" onclick="doBank()" disabled>BANK</button>
+  </div>
+  <div style="display:flex;justify-content:center;margin-top:-4px">
+    <button id="btn-coach" class="btn btn-sec" style="font-size:.75rem;padding:7px 16px;border-color:rgba(56,189,248,.35);color:var(--coach)"
+      onclick="S.coach=!S.coach;render()">🎓 Coach Mode</button>
   </div>
 </div>
 
@@ -176,7 +333,7 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 </div>
 
 <div class="ov" id="ov-final">
-  <div class="ov-title ov-final">10,000!</div>
+  <div class="ov-title" style="color:var(--gold)">10,000!</div>
   <div class="ov-sub" id="final-msg"></div>
   <button class="btn btn-pri" onclick="dismissFinal()">LET'S GO</button>
 </div>
@@ -187,6 +344,74 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
   <button class="btn btn-pri" onclick="newGame()">PLAY AGAIN</button>
 </div>
 
+<!-- ═══ HELP OVERLAY ═══ -->
+<div class="ov" id="ov-help" style="align-items:flex-start;text-align:left">
+  <div class="help-wrap">
+    <button class="help-close" onclick="hideHelp()">✕ Close</button>
+
+    <div class="help-section">
+      <h2>How to Score</h2>
+      <table class="help-table">
+        <tr><td>Single 1</td><td>100 pts</td></tr>
+        <tr><td>Single 5</td><td>50 pts</td></tr>
+        <tr><td>Three 1s</td><td>1,000 pts</td></tr>
+        <tr><td>Three 2s</td><td>200 pts</td></tr>
+        <tr><td>Three 3s</td><td>300 pts</td></tr>
+        <tr><td>Three 4s</td><td>400 pts</td></tr>
+        <tr><td>Three 5s</td><td>500 pts</td></tr>
+        <tr><td>Three 6s</td><td>600 pts</td></tr>
+        <tr><td>Four of a kind</td><td>2× the three-of-a-kind score</td></tr>
+        <tr><td>Five of a kind</td><td>4× the three-of-a-kind score</td></tr>
+        <tr><td>Six of a kind</td><td>8× the three-of-a-kind score</td></tr>
+        <tr><td>Straight (1–2–3–4–5–6)</td><td>1,500 pts</td></tr>
+        <tr><td>Three pairs</td><td>1,000 pts</td></tr>
+      </table>
+      <p class="help-note">Straights and three pairs only score when all 6 dice are used together in one roll.</p>
+    </div>
+
+    <div class="help-section">
+      <h2>Game Rules</h2>
+      <table class="help-table">
+        <tr><td>Goal</td><td>First player to reach 10,000 pts wins (after final round)</td></tr>
+        <tr><td>Opening</td><td>Need 500 pts in a single turn to get on the board</td></tr>
+        <tr><td>Banking minimum</td><td>350 pts once you're on the board</td></tr>
+        <tr><td>Hot Dice</td><td>If all 6 dice score, keep the points and roll all 6 again</td></tr>
+        <tr><td>Bust</td><td>Roll with no scoring dice → lose all points for that turn</td></tr>
+        <tr><td>Keeping dice</td><td>You must keep at least 1 scoring die per roll. Once a scoring die is kept, you may also hold non-scoring dice (e.g. keep a pair hoping to complete a triple)</td></tr>
+        <tr><td>Locking</td><td>Kept dice become locked on your next roll — you can't pick them back up</td></tr>
+        <tr><td>Final round</td><td>Once someone hits 10,000, every other player gets exactly one more turn</td></tr>
+      </table>
+    </div>
+
+    <div class="help-section">
+      <h2>Bust Probability by Dice Rolled</h2>
+      <p class="help-note" style="margin-bottom:10px">This is the chance you roll NO scoring dice (bust) based on how many dice are in the roll zone.</p>
+      <div class="bust-bar"><div class="bust-bar-label">1 die</div><div class="bust-bar-fill" style="width:67%"></div><div class="bust-bar-pct">66.7%</div></div>
+      <div class="bust-bar"><div class="bust-bar-label">2 dice</div><div class="bust-bar-fill" style="width:44%"></div><div class="bust-bar-pct">44.4%</div></div>
+      <div class="bust-bar"><div class="bust-bar-label">3 dice</div><div class="bust-bar-fill" style="width:28%"></div><div class="bust-bar-pct">27.8%</div></div>
+      <div class="bust-bar"><div class="bust-bar-label">4 dice</div><div class="bust-bar-fill" style="width:17%"></div><div class="bust-bar-pct">17.0%</div></div>
+      <div class="bust-bar"><div class="bust-bar-label">5 dice</div><div class="bust-bar-fill" style="width:9%"></div><div class="bust-bar-pct">9.0%</div></div>
+      <div class="bust-bar"><div class="bust-bar-label">6 dice</div><div class="bust-bar-fill" style="width:4%"></div><div class="bust-bar-pct">4.0%</div></div>
+      <p class="help-note" style="margin-top:10px">Rolling 1 die is the riskiest move in the game — you'll bust 2 out of every 3 times on average.</p>
+    </div>
+
+    <div class="help-section">
+      <h2>Strategy Tips</h2>
+      <table class="help-table">
+        <tr><td>6 dice left</td><td>Almost always roll — bust risk is only 4%</td></tr>
+        <tr><td>5 dice left</td><td>Usually roll unless you already have a big score banked</td></tr>
+        <tr><td>4 dice left</td><td>Think about your score — 17% bust risk</td></tr>
+        <tr><td>3 dice left</td><td>Getting risky. Bank if you're comfortable with your total</td></tr>
+        <tr><td>2 dice left</td><td>High risk. Only press on if you need the points badly</td></tr>
+        <tr><td>1 die left</td><td>Rarely worth it — 66.7% bust. Bank unless you must roll</td></tr>
+      </table>
+      <p class="help-note" style="margin-top:8px">Turn on <strong>Coach Mode</strong> during play to get live odds and a recommendation on every roll.</p>
+    </div>
+
+    <button class="btn btn-pri" style="width:100%;margin-top:4px" onclick="hideHelp()">Got It!</button>
+  </div>
+</div>
+
 <script>
 // ════════════════════════════════
 // SCORING
@@ -195,19 +420,14 @@ function scoreSet(vals) {
   if (!vals.length) return 0;
   const c = Array(7).fill(0);
   vals.forEach(v => c[v]++);
-
-  // Straight
   if (vals.length === 6 && c.slice(1).every(x => x === 1)) return 1500;
-
-  // 3 pairs (exactly 6 dice with three pairs)
   if (vals.length === 6 && c.filter(x => x === 2).length === 3) return 1000;
-
   let score = 0;
   for (let f = 1; f <= 6; f++) {
     const n = c[f];
     if (n >= 3) {
       let base = f === 1 ? 1000 : f * 100;
-      for (let i = 3; i < n; i++) base *= 2; // 4th+ doubles each time
+      for (let i = 3; i < n; i++) base *= 2;
       score += base;
     } else {
       if (f === 1) score += n * 100;
@@ -242,49 +462,91 @@ function scoreDesc(vals) {
 // STATE
 // ════════════════════════════════
 const S = {
-  players: [],          // [{name, score, onBoard}]
-  cur: 0,               // current player index
-  dice: [],             // [{id, val, kept, locked, rolling}]
-  rolled: false,        // has this turn had at least one roll?
-  hotRolling: false,    // true during the 80ms auto-roll window after hot dice
-  carry: 0,             // hot-dice score carryover
+  players: [],
+  cur: 0,
+  dice: [],
+  rolled: false,
+  hotRolling: false,
+  carry: 0,
+  aiActive: false,
+  coach: false,
   finalRound: false,
   triggerIdx: null,
-  done: new Set(),      // players who completed their final turn
+  done: new Set(),
 };
 
 function mkDice() {
   return Array.from({length:6}, (_,i) => ({id:i, val:null, kept:false, locked:false, rolling:false}));
 }
+function mkPlayer(name='', isAI=false, aiLevel='rookie') {
+  return {name, score:0, onBoard:false, isAI, aiLevel};
+}
+
+// ════════════════════════════════
+// BUST / AVERAGE TABLES
+// ════════════════════════════════
+const BUST_P   = [0, .667, .444, .278, .17, .09, .04];
+const AVG_GAIN = [0,   55,  110,  175, 245, 315, 400];
 
 // ════════════════════════════════
 // SETUP
 // ════════════════════════════════
+const AI_NAMES = {rookie:'Rookie', solid:'Solid', shark:'Shark'};
+
 function renderSetup() {
   const el = document.getElementById('plist');
-  el.innerHTML = S.players.map((p,i) => `
-    <div class="prow">
+  el.innerHTML = S.players.map((p,i) => {
+    const canRemove = S.players.length > 2;
+    return `<div class="prow">
       <input type="text" placeholder="Player ${i+1}" value="${esc(p.name)}" maxlength="18"
+        ${p.isAI ? 'disabled' : ''}
         oninput="S.players[${i}].name=this.value;chkStart()"
         onkeydown="if(event.key==='Enter')document.getElementById('btn-start').click()"/>
-      ${S.players.length > 2
-        ? `<button class="btn-x" onclick="rmPlayer(${i})">×</button>`
-        : ''}
-    </div>`).join('');
+      <div class="ai-pill ${p.isAI?'on':''}" onclick="toggleAI(${i})">
+        <span class="ai-check">${p.isAI?'☑':'☐'}</span>
+        <span>🤖</span>
+      </div>
+      ${p.isAI ? `<select class="ai-lvl" onchange="setAILevel(${i},this.value)">
+        <option value="rookie" ${p.aiLevel==='rookie'?'selected':''}>Rookie</option>
+        <option value="solid"  ${p.aiLevel==='solid' ?'selected':''}>Solid</option>
+        <option value="shark"  ${p.aiLevel==='shark' ?'selected':''}>Shark</option>
+      </select>` : ''}
+      ${canRemove ? `<button class="btn-x" onclick="rmPlayer(${i})">×</button>` : ''}
+    </div>`;
+  }).join('');
   chkStart();
+}
+
+function toggleAI(i) {
+  const p = S.players[i];
+  p.isAI = !p.isAI;
+  p.name = p.isAI ? AI_NAMES[p.aiLevel] : '';
+  renderSetup();
+  if (!p.isAI) {
+    setTimeout(() => {
+      const ins = document.querySelectorAll('#plist input[type=text]');
+      if (ins[i]) ins[i].focus();
+    }, 40);
+  }
+}
+
+function setAILevel(i, level) {
+  S.players[i].aiLevel = level;
+  S.players[i].name = AI_NAMES[level];
+  renderSetup();
 }
 
 function chkStart() {
   document.getElementById('btn-start').disabled =
-    !S.players.every(p => p.name.trim());
+    !S.players.every(p => p.isAI || p.name.trim());
 }
 
 function addPlayer() {
   if (S.players.length >= 8) return;
-  S.players.push({name:'', score:0, onBoard:false});
+  S.players.push(mkPlayer());
   renderSetup();
   setTimeout(() => {
-    const ins = document.querySelectorAll('#plist input');
+    const ins = document.querySelectorAll('#plist input[type=text]');
     ins[ins.length-1].focus();
   }, 40);
 }
@@ -296,8 +558,8 @@ function rmPlayer(i) {
 }
 
 function startGame() {
-  S.players.forEach(p => { p.name=p.name.trim(); p.score=0; p.onBoard=false; });
-  S.cur=0; S.finalRound=false; S.triggerIdx=null; S.done=new Set();
+  S.players.forEach(p => { if (!p.isAI) p.name = p.name.trim(); p.score=0; p.onBoard=false; });
+  S.cur=0; S.finalRound=false; S.triggerIdx=null; S.done=new Set(); S.aiActive=false;
   document.getElementById('setup').style.display='none';
   document.getElementById('game').style.display='flex';
   beginTurn();
@@ -308,9 +570,15 @@ function newGame() {
   document.getElementById('game').style.display='none';
   document.getElementById('setup').style.display='flex';
   S.players.forEach(p => { p.score=0; p.onBoard=false; });
-  S.cur=0; S.finalRound=false; S.triggerIdx=null; S.done=new Set();
+  S.cur=0; S.finalRound=false; S.triggerIdx=null; S.done=new Set(); S.aiActive=false;
   renderSetup();
 }
+
+// ════════════════════════════════
+// HELP
+// ════════════════════════════════
+function showHelp() { document.getElementById('ov-help').classList.add('show'); }
+function hideHelp()  { document.getElementById('ov-help').classList.remove('show'); }
 
 // ════════════════════════════════
 // TURN FLOW
@@ -320,56 +588,52 @@ function beginTurn() {
   S.rolled = false;
   S.hotRolling = false;
   S.carry = 0;
+  S.aiActive = false;
   hideOvs();
   render();
+  if (S.players[S.cur].isAI) {
+    S.aiActive = true;
+    render();
+    setTimeout(doRoll, 900);
+  }
 }
 
 function doRoll() {
   const toRoll = S.dice.filter(d => !d.kept);
   if (!toRoll.length) return;
-
-  // Lock all currently-kept dice (from this roll, now becoming "previous")
   S.dice.forEach(d => { if (d.kept) d.locked = true; });
-
   S.rolled = true;
-
-  // Assign new values and flag animation
   toRoll.forEach(d => { d.val = rnd(); d.rolling = true; });
   render();
 
   setTimeout(() => {
     S.dice.forEach(d => d.rolling = false);
-
-    // Bust check: can ANY of the newly rolled dice contribute to score?
     const lockedVals = S.dice.filter(d => d.locked).map(d => d.val);
     const rolledVals = S.dice.filter(d => !d.kept).map(d => d.val);
     const combined   = [...lockedVals, ...rolledVals];
 
     if (scoreSet(combined) <= scoreSet(lockedVals)) {
-      // BUST — no new scoring possible
       document.getElementById('bust-msg').textContent =
         `${S.players[S.cur].name} rolled no scoring dice. Turn points lost!`;
       document.getElementById('ov-bust').classList.add('show');
+      if (S.players[S.cur].isAI) setTimeout(() => { hideOvs(); afterBust(); }, 2000);
+    } else if (S.players[S.cur].isAI) {
+      aiTakeTurn();
     }
     render();
   }, 420);
 }
 
-// Returns true if this die can legally be moved to the kept zone.
-// Rule: the kept set must contain at least 1 scoring die. Once that's satisfied,
-// any die can be added (e.g. keep a 6 alongside scoring dice, chasing pairs/triples).
-// If the kept set has no scoring dice yet, this die must contribute to score
-// in the context of all current dice (locked + kept + full roll zone).
+// ════════════════════════════════
+// HUMAN INPUT
+// ════════════════════════════════
 function canKeepDie(die) {
-  // If the kept set already has scoring dice, any die is allowed
   const keptVals = S.dice.filter(d => d.kept).map(d => d.val);
   if (scoreSet(keptVals) > 0) return true;
-
-  // No scoring dice yet — this die must contribute in the full roll context
-  const lockedVals      = S.dice.filter(d => d.locked).map(d => d.val);
-  const unlockedKeptVals= S.dice.filter(d => d.kept && !d.locked).map(d => d.val);
-  const rollVals        = S.dice.filter(d => !d.kept).map(d => d.val); // includes die
-  const rollValsWithout = S.dice.filter(d => !d.kept && d.id !== die.id).map(d => d.val);
+  const lockedVals       = S.dice.filter(d => d.locked).map(d => d.val);
+  const unlockedKeptVals = S.dice.filter(d => d.kept && !d.locked).map(d => d.val);
+  const rollVals         = S.dice.filter(d => !d.kept).map(d => d.val);
+  const rollValsWithout  = S.dice.filter(d => !d.kept && d.id !== die.id).map(d => d.val);
   const allVals    = [...lockedVals, ...unlockedKeptVals, ...rollVals];
   const withoutDie = [...lockedVals, ...unlockedKeptVals, ...rollValsWithout];
   return scoreSet(allVals) > scoreSet(withoutDie);
@@ -379,28 +643,20 @@ function shakeEl(id) {
   const el = document.getElementById('d' + id);
   if (!el) return;
   el.classList.remove('no-score');
-  void el.offsetWidth; // reflow to restart animation
+  void el.offsetWidth;
   el.classList.add('no-score');
   setTimeout(() => el.classList.remove('no-score'), 320);
 }
 
 function toggleDie(id) {
-  if (!S.rolled) return;
+  if (!S.rolled || S.aiActive) return;
   const d = S.dice.find(x => x.id === id);
   if (!d || d.rolling || d.locked) return;
-
   if (!d.kept) {
-    // Validate: die must contribute to scoring in the current roll context
     if (!canKeepDie(d)) { shakeEl(id); return; }
     d.kept = true;
-    // Check hot dice: all 6 now kept
-    if (S.dice.every(x => x.kept)) {
-      render();
-      showHot();
-      return;
-    }
+    if (S.dice.every(x => x.kept)) { render(); showHot(); return; }
   } else {
-    // Pick back up — must leave ≥1 keeper
     const keptCount = S.dice.filter(x => x.kept).length;
     if (keptCount <= 1) return;
     d.kept = false;
@@ -409,6 +665,7 @@ function toggleDie(id) {
 }
 
 function doBank() {
+  if (S.aiActive) return;
   const ts = turnScore();
   const p  = S.players[S.cur];
   if (!bankOk(p, ts)) return;
@@ -418,7 +675,8 @@ function doBank() {
 }
 
 function afterBust() {
-  S.carry = 0; // lose all turn points
+  S.carry = 0;
+  S.aiActive = false;
   completeTurn();
 }
 
@@ -427,31 +685,34 @@ function doHotRoll() {
   S.carry += scoreSet(kv);
   S.dice = mkDice();
   S.rolled = false;
-  S.hotRolling = true; // disable ROLL during the auto-roll window
+  S.hotRolling = true;
   hideOvs();
   render();
   setTimeout(() => { S.hotRolling = false; doRoll(); }, 80);
 }
 
+function showHot() {
+  document.getElementById('ov-hot').classList.add('show');
+  if (S.players[S.cur].isAI) setTimeout(() => { hideOvs(); doHotRoll(); }, 1600);
+}
+
 function completeTurn() {
   const p = S.players[S.cur];
   if (!S.finalRound && p.score >= 10000) {
-    S.finalRound  = true;
-    S.triggerIdx  = S.cur;
+    S.finalRound = true;
+    S.triggerIdx = S.cur;
     S.done.add(S.cur);
     document.getElementById('final-msg').textContent =
       `${p.name} reached ${p.score.toLocaleString()}! Every other player gets one final turn.`;
     document.getElementById('ov-final').classList.add('show');
-    return; // wait for player to dismiss
+    if (p.isAI) setTimeout(dismissFinal, 2200);
+    return;
   }
   if (S.finalRound) S.done.add(S.cur);
   advance();
 }
 
-function dismissFinal() {
-  hideOvs();
-  advance();
-}
+function dismissFinal() { hideOvs(); advance(); }
 
 function advance() {
   const n = S.players.length;
@@ -467,18 +728,177 @@ function advance() {
 
 function endGame() {
   hideOvs();
-  const ranked  = [...S.players].sort((a,b) => b.score - a.score);
+  const ranked   = [...S.players].sort((a,b) => b.score - a.score);
   const topScore = ranked[0].score;
   const winners  = ranked.filter(p => p.score === topScore);
-  const titleEl  = document.getElementById('ov-win').querySelector('.ov-title');
-  titleEl.textContent = winners.length > 1 ? 'TIE!' : 'WINNER!';
+  document.getElementById('ov-win').querySelector('.ov-title').textContent =
+    winners.length > 1 ? 'TIE!' : 'WINNER!';
   document.getElementById('win-msg').innerHTML =
     ranked.map((p,i) => `${['🥇','🥈','🥉'][i]||`${i+1}.`} ${esc(p.name)}: ${p.score.toLocaleString()}`).join('<br>');
   document.getElementById('ov-win').classList.add('show');
 }
 
-function showHot() {
-  document.getElementById('ov-hot').classList.add('show');
+// ════════════════════════════════
+// AI PLAYER
+// ════════════════════════════════
+const AI_SPD = { think:650, keepGap:380, decide:820 };
+
+function aiTakeTurn() {
+  const player = S.players[S.cur];
+  S.aiActive = true;
+  render();
+
+  const lockedVals = S.dice.filter(d => d.locked).map(d => d.val);
+  const rollDice   = S.dice.filter(d => !d.kept);
+  const keepIds    = aiChooseKeeps(player.aiLevel, lockedVals, rollDice);
+
+  let idx = 0;
+  function keepNext() {
+    if (idx >= keepIds.length) {
+      setTimeout(() => { S.aiActive = false; aiDecide(player); }, AI_SPD.decide);
+      return;
+    }
+    const die = S.dice.find(d => d.id === keepIds[idx]);
+    if (die && !die.kept) {
+      die.kept = true;
+      if (S.dice.every(x => x.kept)) { render(); showHot(); return; }
+      render();
+    }
+    idx++;
+    setTimeout(keepNext, AI_SPD.keepGap);
+  }
+  setTimeout(keepNext, AI_SPD.think);
+}
+
+function aiChooseKeeps(level, lockedVals, rollDice) {
+  if (!rollDice.length) return [];
+  const n = rollDice.length;
+  let bestScore = scoreSet(lockedVals);
+  let bestIds   = [];
+
+  for (let mask = 1; mask < (1 << n); mask++) {
+    const subset   = rollDice.filter((_, i) => mask & (1 << i));
+    const combined = [...lockedVals, ...subset.map(d => d.val)];
+    const s = scoreSet(combined);
+    if (s > bestScore) { bestScore = s; bestIds = subset.map(d => d.id); }
+  }
+
+  if (level !== 'rookie' && bestIds.length > 0) {
+    const keptVals = bestIds.map(id => rollDice.find(d => d.id === id).val);
+    if (scoreSet([...lockedVals, ...keptVals]) > 0) {
+      const lockedC = Array(7).fill(0);
+      lockedVals.forEach(v => lockedC[v]++);
+      const keptC = Array(7).fill(0);
+      keptVals.forEach(v => keptC[v]++);
+
+      for (let face = 2; face <= 6; face++) {
+        if (face === 5) continue;
+        const alreadyKept = keptC[face];
+        const inLocked    = lockedC[face];
+        const available   = rollDice.filter(d => d.val === face && !bestIds.includes(d.id));
+        const total       = alreadyKept + inLocked + available.length;
+        const minPairs    = level === 'shark' ? 1 : 2;
+        if (total >= 3 && available.length > 0 && (alreadyKept + inLocked) >= minPairs) {
+          bestIds = [...bestIds, ...available.map(d => d.id)];
+        }
+      }
+    }
+  }
+  return bestIds;
+}
+
+function aiDecide(player) {
+  const ts    = turnScore();
+  const nRoll = S.dice.filter(d => !d.kept).length;
+
+  if (!bankOk(player, ts)) { if (nRoll > 0) doRoll(); return; }
+  if (nRoll === 0) { aiBankNow(player, ts); return; }
+
+  const lv = player.aiLevel;
+  if (lv === 'rookie') {
+    ts >= 750 ? aiBankNow(player, ts) : doRoll();
+  } else if (lv === 'solid') {
+    const threshold = Math.max(500, 850 - nRoll * 70);
+    ts >= threshold ? aiBankNow(player, ts) : doRoll();
+  } else {
+    const bustP   = BUST_P[nRoll]   || 0.5;
+    const avgGain = AVG_GAIN[nRoll] || 80;
+    let   ev      = (1 - bustP) * (ts + avgGain);
+    const topScore = Math.max(...S.players.map(p => p.score));
+    if (topScore - player.score > 2000) ev *= 1.12;
+    ts >= ev ? aiBankNow(player, ts) : doRoll();
+  }
+}
+
+function aiBankNow(player, ts) {
+  player.score += ts;
+  player.onBoard = true;
+  completeTurn();
+}
+
+// ════════════════════════════════
+// COACH
+// ════════════════════════════════
+function coachData() {
+  const p     = S.players[S.cur];
+  const ts    = turnScore();
+  const nRoll = S.dice.filter(d => !d.kept).length;
+  const bustP = nRoll > 0 ? BUST_P[nRoll] : 0;
+  const avgG  = nRoll > 0 ? AVG_GAIN[nRoll] : 0;
+  const ev    = nRoll > 0 ? Math.round((1 - bustP) * (ts + avgG)) : 0;
+  const canB  = bankOk(p, ts);
+
+  let rec = '';
+  if (nRoll === 0) {
+    rec = '🎯 Hot Dice! All dice scored — keep the points and roll all 6 again.';
+  } else if (!canB) {
+    const needed = p.onBoard ? 350 : 500;
+    rec = `⚠️ You need ${(needed - ts).toLocaleString()} more pts to ${p.onBoard ? 'bank' : 'open'}. Keep rolling.`;
+  } else if (ts >= ev) {
+    rec = `✅ Lean toward banking — your ${ts.toLocaleString()} pts is ahead of the expected value of rolling (${ev.toLocaleString()} pts). ${nRoll === 1 ? 'One die has a 66.7% bust chance.' : ''}`;
+  } else {
+    rec = `🎲 Lean toward rolling — expected value of rolling (~${ev.toLocaleString()} pts) beats your current ${ts.toLocaleString()} pts. Bust chance: ${Math.round(bustP*100)}%.`;
+  }
+
+  return { ts, nRoll, bustP, avgG, ev, canB, rec };
+}
+
+function renderCoach() {
+  const p = S.players[S.cur];
+  const isHuman = !p.isAI && !S.aiActive;
+  const panel   = document.getElementById('coach-panel');
+  const btnCoach = document.getElementById('btn-coach');
+
+  // Hide coach button during AI turns or when no dice rolled yet
+  btnCoach.style.display = (isHuman) ? '' : 'none';
+
+  if (!S.coach || !isHuman || !S.rolled) {
+    panel.classList.remove('show');
+    return;
+  }
+
+  panel.classList.add('show');
+  const d = coachData();
+
+  document.getElementById('cp-stats').innerHTML = `
+    <div class="cp-stat">
+      <div class="cp-stat-val">${d.ts.toLocaleString()}</div>
+      <div class="cp-stat-lbl">Turn Score</div>
+    </div>
+    <div class="cp-stat">
+      <div class="cp-stat-val">${d.nRoll}</div>
+      <div class="cp-stat-lbl">Dice to Roll</div>
+    </div>
+    <div class="cp-stat">
+      <div class="cp-stat-val">${d.nRoll > 0 ? Math.round(d.bustP*100)+'%' : '—'}</div>
+      <div class="cp-stat-lbl">Bust Chance</div>
+    </div>
+    <div class="cp-stat">
+      <div class="cp-stat-val">${d.nRoll > 0 ? '~'+d.ev.toLocaleString() : '—'}</div>
+      <div class="cp-stat-lbl tip">ROLL EV <i class="tip-i" tabindex="0" onclick="this.classList.toggle('open')">i</i><span class="tip-box">Average score if you roll — calculated as (1 − bust%) × (your score + avg gain from remaining dice). If your score beats this number, banking is the safer play.</span></div>
+    </div>`;
+
+  document.getElementById('cp-rec').textContent = d.rec;
 }
 
 // ════════════════════════════════
@@ -497,6 +917,7 @@ function bankOk(p, ts) {
 function rnd() { return Math.floor(Math.random() * 6) + 1; }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function hideOvs() { document.querySelectorAll('.ov').forEach(o => o.classList.remove('show')); }
+function hideHelp() { document.getElementById('ov-help').classList.remove('show'); }
 
 // ════════════════════════════════
 // RENDER
@@ -505,14 +926,18 @@ function render() {
   const p  = S.players[S.cur];
   const ts = turnScore();
   const kv = S.dice.filter(d => d.kept).map(d => d.val);
+  const isAI = p.isAI;
 
-  // Turn info
-  document.getElementById('tname').textContent = p.name;
+  document.getElementById('tname').innerHTML =
+    esc(p.name) + (isAI ? ` <span class="badge b-ai">${p.aiLevel.toUpperCase()}</span>` : '');
+
   document.getElementById('tscore').textContent = ts.toLocaleString();
 
   const desc = scoreDesc(kv);
   let meta = '';
-  if (S.rolled) {
+  if (isAI && S.aiActive) {
+    meta = `<span class="thinking">🤖 thinking…</span>`;
+  } else if (S.rolled) {
     if (!p.onBoard) {
       meta += ts >= 500
         ? `<span class="ok">✓ 500 to open met</span>`
@@ -523,23 +948,25 @@ function render() {
         : `<span class="no">${350-ts} more to bank</span>`;
     }
   }
-  if (desc) meta += `<span>${desc}</span>`;
-  if (S.carry) meta += `<span class="carry">+${S.carry.toLocaleString()} carried</span>`;
+  if (!S.aiActive && desc) meta += `<span>${desc}</span>`;
+  if (S.carry)             meta += `<span class="carry">+${S.carry.toLocaleString()} carried</span>`;
   document.getElementById('tmeta').innerHTML = meta;
 
   // Scoreboard
-  const sbEl = document.getElementById('sb');
-  sbEl.innerHTML = '<div class="sb-title">Scoreboard</div>' +
+  document.getElementById('sb').innerHTML = '<div class="sb-title">Scoreboard</div>' +
     S.players.map((pl,i) => {
       const isActive = i === S.cur;
       const isDone   = S.finalRound && S.done.has(i) && !isActive;
       let badge, bcls;
-      if (pl.score >= 10000) { badge='LEADS'; bcls='b-lead'; }
-      else if (pl.onBoard)   { badge='ON';    bcls='b-on'; }
-      else                   { badge='OPEN';  bcls='b-open'; }
+      if (pl.score >= 10000)  { badge='LEADS'; bcls='b-lead'; }
+      else if (pl.onBoard)    { badge='ON';    bcls='b-on'; }
+      else                    { badge='OPEN';  bcls='b-open'; }
+      const aiBadge = pl.isAI
+        ? `<span class="badge b-ai">${pl.aiLevel.charAt(0).toUpperCase()+pl.aiLevel.slice(1)}</span>` : '';
       return `<div class="sr ${isActive?'active':''} ${isDone?'done':''}">
         <div class="dot"></div>
         <div class="sname">${esc(pl.name)}</div>
+        ${aiBadge}
         <span class="badge ${bcls}">${badge}</span>
         <div class="spx">${pl.score.toLocaleString()}</div>
       </div>`;
@@ -555,11 +982,9 @@ function render() {
   // Dice
   const kept = S.dice.filter(d => d.kept);
   const roll  = S.dice.filter(d => !d.kept);
-
   document.getElementById('kept-row').innerHTML = kept.length
     ? kept.map(dieSVG).join('')
     : '<span class="empty-msg">No dice kept</span>';
-
   document.getElementById('roll-row').innerHTML = roll.length
     ? roll.map(dieSVG).join('')
     : '<span class="empty-msg">—</span>';
@@ -567,13 +992,16 @@ function render() {
   // Buttons
   const hasRollable = roll.length > 0;
   const hasKeeper   = S.dice.some(d => d.kept);
-  const canRoll     = !S.hotRolling && (S.rolled ? (hasRollable && hasKeeper) : hasRollable);
+  const canRoll = !isAI && !S.hotRolling && !S.aiActive &&
+                  (S.rolled ? (hasRollable && hasKeeper) : hasRollable);
   const btnRoll = document.getElementById('btn-roll');
   btnRoll.disabled = !canRoll;
   btnRoll.textContent = !S.rolled ? 'ROLL' : `ROLL (${roll.length})`;
-
   document.getElementById('btn-bank').disabled =
-    !(S.rolled && kept.length && bankOk(p, ts));
+    isAI || S.aiActive || !(S.rolled && kept.length && bankOk(p, ts));
+
+  // Coach
+  renderCoach();
 }
 
 function dieSVG(d) {
@@ -583,14 +1011,14 @@ function dieSVG(d) {
   else               cls += ' kept';
   if (d.rolling)     cls += ' rolling';
   const pin = d.locked ? '<span class="lockpin">🔒</span>' : '';
-  const val  = d.val !== null ? d.val : '';
+  const val = d.val !== null ? d.val : '';
   return `<div id="d${d.id}" class="${cls}" onclick="toggleDie(${d.id})">${pin}${val}</div>`;
 }
 
 // ════════════════════════════════
 // INIT
 // ════════════════════════════════
-S.players = [{name:'',score:0,onBoard:false},{name:'',score:0,onBoard:false}];
+S.players = [mkPlayer(), mkPlayer()];
 renderSetup();
 </script>
 </body>
