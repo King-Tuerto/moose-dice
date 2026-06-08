@@ -9,7 +9,7 @@
 :root{
   --bg:#1a1a2e;--surface:#16213e;--card:#0f3460;
   --accent:#e94560;--green:#2ecc71;--green-dk:#219a52;
-  --gold:#f5a623;--text:#eee;--dim:#888;
+  --gold:#f5a623;--text:#eee;--dim:#888;--robot:#818cf8;
   --die:70px;--rad:10px;
 }
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;
@@ -21,11 +21,23 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 /* ── SETUP ── */
 #setup{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:40px}
 .plist{width:100%;display:flex;flex-direction:column;gap:8px}
-.prow{display:flex;gap:8px;align-items:center}
-.prow input{flex:1;background:var(--surface);border:1px solid #333;color:var(--text);
-  padding:10px 13px;border-radius:8px;font-size:.95rem;outline:none;transition:border .15s}
-.prow input:focus{border-color:var(--gold)}
-.prow input::placeholder{color:#555}
+.prow{display:flex;gap:6px;align-items:center}
+.prow input[type=text]{flex:1;background:var(--surface);border:1px solid #333;color:var(--text);
+  padding:10px 13px;border-radius:8px;font-size:.95rem;outline:none;transition:border .15s;min-width:0}
+.prow input[type=text]:focus{border-color:var(--gold)}
+.prow input[type=text]::placeholder{color:#555}
+.prow input[type=text]:disabled{opacity:.5;cursor:default}
+/* AI toggle */
+.ai-pill{display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid #333;
+  border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:border .15s}
+.ai-pill:hover{border-color:var(--robot)}
+.ai-pill .ai-check{font-size:.8rem;color:var(--dim);line-height:1}
+.ai-pill.on{border-color:var(--robot);background:rgba(129,140,248,.1)}
+.ai-pill.on .ai-check{color:var(--robot)}
+/* AI level select */
+.ai-lvl{background:var(--surface);border:1px solid var(--robot);color:var(--robot);
+  border-radius:8px;padding:6px 8px;font-size:.8rem;font-weight:700;cursor:pointer;
+  letter-spacing:.5px;outline:none;flex-shrink:0}
 .btn-x{background:none;border:1px solid #444;color:#666;width:34px;height:34px;border-radius:6px;
   cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .btn-x:hover{border-color:var(--accent);color:var(--accent)}
@@ -58,6 +70,7 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 .b-open{background:rgba(233,69,96,.15);color:var(--accent)}
 .b-on{background:rgba(46,204,113,.15);color:var(--green)}
 .b-lead{background:rgba(245,166,35,.2);color:var(--gold)}
+.b-ai{background:rgba(129,140,248,.15);color:var(--robot);margin-left:-4px}
 
 /* final banner */
 #fb{display:none;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);
@@ -66,10 +79,12 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 
 /* turn info */
 #ti{background:var(--surface);border-radius:11px;padding:13px 15px}
-.tname{font-size:1.15rem;font-weight:700;color:var(--gold);margin-bottom:3px}
+.tname{font-size:1.15rem;font-weight:700;color:var(--gold);margin-bottom:3px;display:flex;align-items:center;gap:8px}
 .tscore{font-size:2.1rem;font-weight:900;letter-spacing:-1px;line-height:1}
 .tmeta{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px;font-size:.75rem;color:var(--dim)}
 .ok{color:var(--green)} .no{color:var(--accent)} .carry{color:var(--gold)}
+.thinking{color:var(--robot);animation:blink 0.9s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
 
 /* zones */
 .zone{background:var(--surface);border-radius:11px;padding:11px 13px;min-height:92px}
@@ -166,19 +181,19 @@ h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba
 <div class="ov" id="ov-bust">
   <div class="ov-title">BUSTED!</div>
   <div class="ov-sub" id="bust-msg"></div>
-  <button class="btn btn-sec" onclick="afterBust()">NEXT PLAYER</button>
+  <button class="btn btn-sec" id="bust-btn" onclick="afterBust()">NEXT PLAYER</button>
 </div>
 
 <div class="ov" id="ov-hot">
   <div class="ov-title">HOT DICE!</div>
   <div class="ov-sub">All 6 scored! Roll all 6 again — points carry forward.</div>
-  <button class="btn btn-pri" onclick="doHotRoll()">KEEP ROLLING!</button>
+  <button class="btn btn-pri" id="hot-btn" onclick="doHotRoll()">KEEP ROLLING!</button>
 </div>
 
 <div class="ov" id="ov-final">
-  <div class="ov-title ov-final">10,000!</div>
+  <div class="ov-title" style="color:var(--gold)">10,000!</div>
   <div class="ov-sub" id="final-msg"></div>
-  <button class="btn btn-pri" onclick="dismissFinal()">LET'S GO</button>
+  <button class="btn btn-pri" id="final-btn" onclick="dismissFinal()">LET'S GO</button>
 </div>
 
 <div class="ov" id="ov-win">
@@ -195,19 +210,14 @@ function scoreSet(vals) {
   if (!vals.length) return 0;
   const c = Array(7).fill(0);
   vals.forEach(v => c[v]++);
-
-  // Straight
   if (vals.length === 6 && c.slice(1).every(x => x === 1)) return 1500;
-
-  // 3 pairs (exactly 6 dice with three pairs)
   if (vals.length === 6 && c.filter(x => x === 2).length === 3) return 1000;
-
   let score = 0;
   for (let f = 1; f <= 6; f++) {
     const n = c[f];
     if (n >= 3) {
       let base = f === 1 ? 1000 : f * 100;
-      for (let i = 3; i < n; i++) base *= 2; // 4th+ doubles each time
+      for (let i = 3; i < n; i++) base *= 2;
       score += base;
     } else {
       if (f === 1) score += n * 100;
@@ -242,49 +252,86 @@ function scoreDesc(vals) {
 // STATE
 // ════════════════════════════════
 const S = {
-  players: [],          // [{name, score, onBoard}]
-  cur: 0,               // current player index
-  dice: [],             // [{id, val, kept, locked, rolling}]
-  rolled: false,        // has this turn had at least one roll?
-  hotRolling: false,    // true during the 80ms auto-roll window after hot dice
-  carry: 0,             // hot-dice score carryover
+  players: [],       // [{name, score, onBoard, isAI, aiLevel}]
+  cur: 0,
+  dice: [],          // [{id, val, kept, locked, rolling}]
+  rolled: false,
+  hotRolling: false,
+  carry: 0,
+  aiActive: false,   // true while an AI is mid-turn (blocks human input)
   finalRound: false,
   triggerIdx: null,
-  done: new Set(),      // players who completed their final turn
+  done: new Set(),
 };
 
 function mkDice() {
   return Array.from({length:6}, (_,i) => ({id:i, val:null, kept:false, locked:false, rolling:false}));
 }
 
+function mkPlayer(name='', isAI=false, aiLevel='rookie') {
+  return {name, score:0, onBoard:false, isAI, aiLevel};
+}
+
 // ════════════════════════════════
 // SETUP
 // ════════════════════════════════
+const AI_NAMES = {rookie:'Rookie', solid:'Solid', shark:'Shark'};
+
 function renderSetup() {
   const el = document.getElementById('plist');
-  el.innerHTML = S.players.map((p,i) => `
-    <div class="prow">
+  el.innerHTML = S.players.map((p,i) => {
+    const canRemove = S.players.length > 2;
+    return `<div class="prow">
       <input type="text" placeholder="Player ${i+1}" value="${esc(p.name)}" maxlength="18"
+        ${p.isAI ? 'disabled' : ''}
         oninput="S.players[${i}].name=this.value;chkStart()"
         onkeydown="if(event.key==='Enter')document.getElementById('btn-start').click()"/>
-      ${S.players.length > 2
-        ? `<button class="btn-x" onclick="rmPlayer(${i})">×</button>`
-        : ''}
-    </div>`).join('');
+      <div class="ai-pill ${p.isAI?'on':''}" onclick="toggleAI(${i})">
+        <span class="ai-check">${p.isAI?'☑':'☐'}</span>
+        <span>🤖</span>
+      </div>
+      ${p.isAI ? `<select class="ai-lvl" onchange="setAILevel(${i},this.value)">
+        <option value="rookie" ${p.aiLevel==='rookie'?'selected':''}>Rookie</option>
+        <option value="solid"  ${p.aiLevel==='solid' ?'selected':''}>Solid</option>
+        <option value="shark"  ${p.aiLevel==='shark' ?'selected':''}>Shark</option>
+      </select>` : ''}
+      ${canRemove ? `<button class="btn-x" onclick="rmPlayer(${i})">×</button>` : ''}
+    </div>`;
+  }).join('');
   chkStart();
+}
+
+function toggleAI(i) {
+  const p = S.players[i];
+  p.isAI = !p.isAI;
+  p.name = p.isAI ? AI_NAMES[p.aiLevel] : '';
+  renderSetup();
+  if (!p.isAI) {
+    // focus the name input for this row
+    setTimeout(() => {
+      const ins = document.querySelectorAll('#plist input[type=text]');
+      if (ins[i]) ins[i].focus();
+    }, 40);
+  }
+}
+
+function setAILevel(i, level) {
+  S.players[i].aiLevel = level;
+  S.players[i].name = AI_NAMES[level];
+  renderSetup();
 }
 
 function chkStart() {
   document.getElementById('btn-start').disabled =
-    !S.players.every(p => p.name.trim());
+    !S.players.every(p => p.isAI || p.name.trim());
 }
 
 function addPlayer() {
   if (S.players.length >= 8) return;
-  S.players.push({name:'', score:0, onBoard:false});
+  S.players.push(mkPlayer());
   renderSetup();
   setTimeout(() => {
-    const ins = document.querySelectorAll('#plist input');
+    const ins = document.querySelectorAll('#plist input[type=text]');
     ins[ins.length-1].focus();
   }, 40);
 }
@@ -296,8 +343,8 @@ function rmPlayer(i) {
 }
 
 function startGame() {
-  S.players.forEach(p => { p.name=p.name.trim(); p.score=0; p.onBoard=false; });
-  S.cur=0; S.finalRound=false; S.triggerIdx=null; S.done=new Set();
+  S.players.forEach(p => { if (!p.isAI) p.name = p.name.trim(); p.score=0; p.onBoard=false; });
+  S.cur=0; S.finalRound=false; S.triggerIdx=null; S.done=new Set(); S.aiActive=false;
   document.getElementById('setup').style.display='none';
   document.getElementById('game').style.display='flex';
   beginTurn();
@@ -308,7 +355,7 @@ function newGame() {
   document.getElementById('game').style.display='none';
   document.getElementById('setup').style.display='flex';
   S.players.forEach(p => { p.score=0; p.onBoard=false; });
-  S.cur=0; S.finalRound=false; S.triggerIdx=null; S.done=new Set();
+  S.cur=0; S.finalRound=false; S.triggerIdx=null; S.done=new Set(); S.aiActive=false;
   renderSetup();
 }
 
@@ -320,55 +367,54 @@ function beginTurn() {
   S.rolled = false;
   S.hotRolling = false;
   S.carry = 0;
+  S.aiActive = false;
   hideOvs();
   render();
+  // AI players auto-roll after a short look-at-the-board pause
+  if (S.players[S.cur].isAI) {
+    S.aiActive = true;
+    render();
+    setTimeout(doRoll, 900);
+  }
 }
 
 function doRoll() {
   const toRoll = S.dice.filter(d => !d.kept);
   if (!toRoll.length) return;
-
-  // Lock all currently-kept dice (from this roll, now becoming "previous")
   S.dice.forEach(d => { if (d.kept) d.locked = true; });
-
   S.rolled = true;
-
-  // Assign new values and flag animation
   toRoll.forEach(d => { d.val = rnd(); d.rolling = true; });
   render();
 
   setTimeout(() => {
     S.dice.forEach(d => d.rolling = false);
-
-    // Bust check: can ANY of the newly rolled dice contribute to score?
     const lockedVals = S.dice.filter(d => d.locked).map(d => d.val);
     const rolledVals = S.dice.filter(d => !d.kept).map(d => d.val);
     const combined   = [...lockedVals, ...rolledVals];
 
     if (scoreSet(combined) <= scoreSet(lockedVals)) {
-      // BUST — no new scoring possible
       document.getElementById('bust-msg').textContent =
         `${S.players[S.cur].name} rolled no scoring dice. Turn points lost!`;
       document.getElementById('ov-bust').classList.add('show');
+      // AI auto-dismisses bust after 2s
+      if (S.players[S.cur].isAI) setTimeout(() => { hideOvs(); afterBust(); }, 2000);
+    } else if (S.players[S.cur].isAI) {
+      // Not a bust — AI picks dice and decides
+      aiTakeTurn();
     }
     render();
   }, 420);
 }
 
-// Returns true if this die can legally be moved to the kept zone.
-// Rule: the kept set must contain at least 1 scoring die. Once that's satisfied,
-// any die can be added (e.g. keep a 6 alongside scoring dice, chasing pairs/triples).
-// If the kept set has no scoring dice yet, this die must contribute to score
-// in the context of all current dice (locked + kept + full roll zone).
+// ════════════════════════════════
+// HUMAN INPUT
+// ════════════════════════════════
 function canKeepDie(die) {
-  // If the kept set already has scoring dice, any die is allowed
   const keptVals = S.dice.filter(d => d.kept).map(d => d.val);
   if (scoreSet(keptVals) > 0) return true;
-
-  // No scoring dice yet — this die must contribute in the full roll context
   const lockedVals      = S.dice.filter(d => d.locked).map(d => d.val);
   const unlockedKeptVals= S.dice.filter(d => d.kept && !d.locked).map(d => d.val);
-  const rollVals        = S.dice.filter(d => !d.kept).map(d => d.val); // includes die
+  const rollVals        = S.dice.filter(d => !d.kept).map(d => d.val);
   const rollValsWithout = S.dice.filter(d => !d.kept && d.id !== die.id).map(d => d.val);
   const allVals    = [...lockedVals, ...unlockedKeptVals, ...rollVals];
   const withoutDie = [...lockedVals, ...unlockedKeptVals, ...rollValsWithout];
@@ -379,28 +425,20 @@ function shakeEl(id) {
   const el = document.getElementById('d' + id);
   if (!el) return;
   el.classList.remove('no-score');
-  void el.offsetWidth; // reflow to restart animation
+  void el.offsetWidth;
   el.classList.add('no-score');
   setTimeout(() => el.classList.remove('no-score'), 320);
 }
 
 function toggleDie(id) {
-  if (!S.rolled) return;
+  if (!S.rolled || S.aiActive) return;
   const d = S.dice.find(x => x.id === id);
   if (!d || d.rolling || d.locked) return;
-
   if (!d.kept) {
-    // Validate: die must contribute to scoring in the current roll context
     if (!canKeepDie(d)) { shakeEl(id); return; }
     d.kept = true;
-    // Check hot dice: all 6 now kept
-    if (S.dice.every(x => x.kept)) {
-      render();
-      showHot();
-      return;
-    }
+    if (S.dice.every(x => x.kept)) { render(); showHot(); return; }
   } else {
-    // Pick back up — must leave ≥1 keeper
     const keptCount = S.dice.filter(x => x.kept).length;
     if (keptCount <= 1) return;
     d.kept = false;
@@ -409,6 +447,7 @@ function toggleDie(id) {
 }
 
 function doBank() {
+  if (S.aiActive) return;
   const ts = turnScore();
   const p  = S.players[S.cur];
   if (!bankOk(p, ts)) return;
@@ -418,7 +457,8 @@ function doBank() {
 }
 
 function afterBust() {
-  S.carry = 0; // lose all turn points
+  S.carry = 0;
+  S.aiActive = false;
   completeTurn();
 }
 
@@ -427,31 +467,35 @@ function doHotRoll() {
   S.carry += scoreSet(kv);
   S.dice = mkDice();
   S.rolled = false;
-  S.hotRolling = true; // disable ROLL during the auto-roll window
+  S.hotRolling = true;
   hideOvs();
   render();
   setTimeout(() => { S.hotRolling = false; doRoll(); }, 80);
 }
 
+function showHot() {
+  document.getElementById('ov-hot').classList.add('show');
+  if (S.players[S.cur].isAI) setTimeout(() => { hideOvs(); doHotRoll(); }, 1600);
+}
+
 function completeTurn() {
   const p = S.players[S.cur];
   if (!S.finalRound && p.score >= 10000) {
-    S.finalRound  = true;
-    S.triggerIdx  = S.cur;
+    S.finalRound = true;
+    S.triggerIdx = S.cur;
     S.done.add(S.cur);
     document.getElementById('final-msg').textContent =
       `${p.name} reached ${p.score.toLocaleString()}! Every other player gets one final turn.`;
     document.getElementById('ov-final').classList.add('show');
-    return; // wait for player to dismiss
+    // Auto-dismiss for any player (human taps or AI waits)
+    if (p.isAI) setTimeout(dismissFinal, 2200);
+    return;
   }
   if (S.finalRound) S.done.add(S.cur);
   advance();
 }
 
-function dismissFinal() {
-  hideOvs();
-  advance();
-}
+function dismissFinal() { hideOvs(); advance(); }
 
 function advance() {
   const n = S.players.length;
@@ -467,18 +511,157 @@ function advance() {
 
 function endGame() {
   hideOvs();
-  const ranked  = [...S.players].sort((a,b) => b.score - a.score);
+  const ranked   = [...S.players].sort((a,b) => b.score - a.score);
   const topScore = ranked[0].score;
   const winners  = ranked.filter(p => p.score === topScore);
-  const titleEl  = document.getElementById('ov-win').querySelector('.ov-title');
-  titleEl.textContent = winners.length > 1 ? 'TIE!' : 'WINNER!';
+  document.getElementById('ov-win').querySelector('.ov-title').textContent =
+    winners.length > 1 ? 'TIE!' : 'WINNER!';
   document.getElementById('win-msg').innerHTML =
     ranked.map((p,i) => `${['🥇','🥈','🥉'][i]||`${i+1}.`} ${esc(p.name)}: ${p.score.toLocaleString()}`).join('<br>');
   document.getElementById('ov-win').classList.add('show');
 }
 
-function showHot() {
-  document.getElementById('ov-hot').classList.add('show');
+// ════════════════════════════════
+// AI PLAYER
+// ════════════════════════════════
+
+// Approximate bust probability and average score gain for N fresh dice
+const BUST_P   = [0, .667, .444, .278, .17, .09, .04];
+const AVG_GAIN = [0,   55,  110,  175, 245, 315, 400];
+
+// Speed constants (ms) — governs how fast the AI "plays"
+const AI_SPD = { think:650, keepGap:380, decide:820 };
+
+function aiTakeTurn() {
+  const player = S.players[S.cur];
+  S.aiActive = true;
+  render();
+
+  const lockedVals = S.dice.filter(d => d.locked).map(d => d.val);
+  const rollDice   = S.dice.filter(d => !d.kept);
+  const keepIds    = aiChooseKeeps(player.aiLevel, lockedVals, rollDice);
+
+  // Animate keeping dice one at a time
+  let idx = 0;
+  function keepNext() {
+    if (idx >= keepIds.length) {
+      // Done keeping — decide roll or bank
+      setTimeout(() => {
+        S.aiActive = false;
+        aiDecide(player);
+      }, AI_SPD.decide);
+      return;
+    }
+    const die = S.dice.find(d => d.id === keepIds[idx]);
+    if (die && !die.kept) {
+      die.kept = true;
+      if (S.dice.every(x => x.kept)) {
+        render();
+        showHot(); // showHot handles AI auto-continue
+        return;
+      }
+      render();
+    }
+    idx++;
+    setTimeout(keepNext, AI_SPD.keepGap);
+  }
+
+  setTimeout(keepNext, AI_SPD.think);
+}
+
+// Returns array of die IDs to keep from rollDice.
+// Uses brute-force best-scoring subset, then adds strategic non-scoring
+// dice (pairs to chase triples) for Solid/Shark levels.
+function aiChooseKeeps(level, lockedVals, rollDice) {
+  if (!rollDice.length) return [];
+
+  // Brute-force: find subset of rollDice that maximises scoreSet(locked + subset)
+  const n = rollDice.length;
+  let bestScore = scoreSet(lockedVals);
+  let bestIds   = [];
+
+  for (let mask = 1; mask < (1 << n); mask++) {
+    const subset   = rollDice.filter((_, i) => mask & (1 << i));
+    const combined = [...lockedVals, ...subset.map(d => d.val)];
+    const s = scoreSet(combined);
+    if (s > bestScore) { bestScore = s; bestIds = subset.map(d => d.id); }
+  }
+
+  // Solid / Shark: if we're keeping at least 1 scoring die, also keep
+  // pairs (or singles for Shark) of non-1/5 faces to chase triples.
+  if (level !== 'rookie' && bestIds.length > 0) {
+    const keptVals = bestIds.map(id => rollDice.find(d => d.id === id).val);
+    if (scoreSet([...lockedVals, ...keptVals]) > 0) {
+      const lockedC = Array(7).fill(0);
+      lockedVals.forEach(v => lockedC[v]++);
+      const keptC = Array(7).fill(0);
+      keptVals.forEach(v => keptC[v]++);
+
+      for (let face = 2; face <= 6; face++) {
+        if (face === 5) continue; // 5s already captured as scoring
+        const alreadyKept = keptC[face];
+        const inLocked    = lockedC[face];
+        const available   = rollDice.filter(d => d.val === face && !bestIds.includes(d.id));
+        const total       = alreadyKept + inLocked + available.length;
+
+        // Keep this face's remaining dice if keeping them could form a triple
+        const minPairsToChase = level === 'shark' ? 1 : 2;
+        if (total >= 3 && available.length > 0 && (alreadyKept + inLocked) >= minPairsToChase) {
+          bestIds = [...bestIds, ...available.map(d => d.id)];
+        }
+      }
+    }
+  }
+
+  return bestIds;
+}
+
+// Decide whether to roll again or bank.
+function aiDecide(player) {
+  const ts    = turnScore();
+  const nRoll = S.dice.filter(d => !d.kept).length;
+
+  // Can't bank → must roll
+  if (!bankOk(player, ts)) { if (nRoll > 0) doRoll(); return; }
+  // No dice to roll → bank
+  if (nRoll === 0) { aiBankNow(player, ts); return; }
+
+  const lv = player.aiLevel;
+
+  if (lv === 'rookie') {
+    // Bank greedily once past a simple target
+    ts >= 750 ? aiBankNow(player, ts) : doRoll();
+    return;
+  }
+
+  if (lv === 'solid') {
+    // Sliding threshold: more cautious with fewer dice remaining
+    const threshold = Math.max(500, 850 - nRoll * 70);
+    ts >= threshold ? aiBankNow(player, ts) : doRoll();
+    return;
+  }
+
+  if (lv === 'shark') {
+    // Expected-value: E[roll] = P(not bust) × (current + avg gain)
+    const bustP   = BUST_P[nRoll]   || 0.5;
+    const avgGain = AVG_GAIN[nRoll] || 80;
+    let   ev      = (1 - bustP) * (ts + avgGain);
+
+    // Get more aggressive when trailing
+    const topScore = Math.max(...S.players.map(p => p.score));
+    if (topScore - player.score > 2000) ev *= 1.12;
+
+    ts >= ev ? aiBankNow(player, ts) : doRoll();
+    return;
+  }
+
+  aiBankNow(player, ts);
+}
+
+function aiBankNow(player, ts) {
+  player.score += ts;
+  player.onBoard = true;
+  completeTurn();
 }
 
 // ════════════════════════════════
@@ -505,14 +688,19 @@ function render() {
   const p  = S.players[S.cur];
   const ts = turnScore();
   const kv = S.dice.filter(d => d.kept).map(d => d.val);
+  const isAI = p.isAI;
 
-  // Turn info
-  document.getElementById('tname').textContent = p.name;
+  // Turn player name + AI indicator
+  document.getElementById('tname').innerHTML =
+    esc(p.name) + (isAI ? ` <span class="badge b-ai">${p.aiLevel.toUpperCase()}</span>` : '');
+
   document.getElementById('tscore').textContent = ts.toLocaleString();
 
   const desc = scoreDesc(kv);
   let meta = '';
-  if (S.rolled) {
+  if (isAI && S.aiActive) {
+    meta = `<span class="thinking">🤖 thinking…</span>`;
+  } else if (S.rolled) {
     if (!p.onBoard) {
       meta += ts >= 500
         ? `<span class="ok">✓ 500 to open met</span>`
@@ -523,8 +711,8 @@ function render() {
         : `<span class="no">${350-ts} more to bank</span>`;
     }
   }
-  if (desc) meta += `<span>${desc}</span>`;
-  if (S.carry) meta += `<span class="carry">+${S.carry.toLocaleString()} carried</span>`;
+  if (!S.aiActive && desc) meta += `<span>${desc}</span>`;
+  if (S.carry)             meta += `<span class="carry">+${S.carry.toLocaleString()} carried</span>`;
   document.getElementById('tmeta').innerHTML = meta;
 
   // Scoreboard
@@ -534,12 +722,15 @@ function render() {
       const isActive = i === S.cur;
       const isDone   = S.finalRound && S.done.has(i) && !isActive;
       let badge, bcls;
-      if (pl.score >= 10000) { badge='LEADS'; bcls='b-lead'; }
-      else if (pl.onBoard)   { badge='ON';    bcls='b-on'; }
-      else                   { badge='OPEN';  bcls='b-open'; }
+      if (pl.score >= 10000)  { badge='LEADS'; bcls='b-lead'; }
+      else if (pl.onBoard)    { badge='ON';    bcls='b-on'; }
+      else                    { badge='OPEN';  bcls='b-open'; }
+      const aiBadge = pl.isAI
+        ? `<span class="badge b-ai">${pl.aiLevel.charAt(0).toUpperCase()+pl.aiLevel.slice(1)}</span>` : '';
       return `<div class="sr ${isActive?'active':''} ${isDone?'done':''}">
         <div class="dot"></div>
         <div class="sname">${esc(pl.name)}</div>
+        ${aiBadge}
         <span class="badge ${bcls}">${badge}</span>
         <div class="spx">${pl.score.toLocaleString()}</div>
       </div>`;
@@ -564,16 +755,17 @@ function render() {
     ? roll.map(dieSVG).join('')
     : '<span class="empty-msg">—</span>';
 
-  // Buttons
+  // Buttons — disabled during AI turn
   const hasRollable = roll.length > 0;
   const hasKeeper   = S.dice.some(d => d.kept);
-  const canRoll     = !S.hotRolling && (S.rolled ? (hasRollable && hasKeeper) : hasRollable);
+  const canRoll = !isAI && !S.hotRolling && !S.aiActive &&
+                  (S.rolled ? (hasRollable && hasKeeper) : hasRollable);
   const btnRoll = document.getElementById('btn-roll');
   btnRoll.disabled = !canRoll;
   btnRoll.textContent = !S.rolled ? 'ROLL' : `ROLL (${roll.length})`;
 
   document.getElementById('btn-bank').disabled =
-    !(S.rolled && kept.length && bankOk(p, ts));
+    isAI || S.aiActive || !(S.rolled && kept.length && bankOk(p, ts));
 }
 
 function dieSVG(d) {
@@ -583,14 +775,14 @@ function dieSVG(d) {
   else               cls += ' kept';
   if (d.rolling)     cls += ' rolling';
   const pin = d.locked ? '<span class="lockpin">🔒</span>' : '';
-  const val  = d.val !== null ? d.val : '';
+  const val = d.val !== null ? d.val : '';
   return `<div id="d${d.id}" class="${cls}" onclick="toggleDie(${d.id})">${pin}${val}</div>`;
 }
 
 // ════════════════════════════════
 // INIT
 // ════════════════════════════════
-S.players = [{name:'',score:0,onBoard:false},{name:'',score:0,onBoard:false}];
+S.players = [mkPlayer(), mkPlayer()];
 renderSetup();
 </script>
 </body>
