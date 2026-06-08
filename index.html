@@ -616,10 +616,7 @@ function doRoll() {
       document.getElementById('bust-msg').textContent =
         `${S.players[S.cur].name} rolled no scoring dice. Turn points lost!`;
       document.getElementById('ov-bust').classList.add('show');
-      const bustBtn = document.getElementById('bust-btn');
-      bustBtn.disabled = true;
-      setTimeout(() => { bustBtn.disabled = false; }, 2500);
-      if (S.players[S.cur].isAI) setTimeout(() => { hideOvs(); afterBust(); }, 2500);
+      if (S.players[S.cur].isAI) setTimeout(() => { hideOvs(); afterBust(); }, 3000);
     } else if (S.players[S.cur].isAI) {
       aiTakeTurn();
     }
