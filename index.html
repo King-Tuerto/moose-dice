@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Moose Dice</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#1a1a2e;--surface:#16213e;--card:#0f3460;
+  --accent:#e94560;--green:#2ecc71;--green-dk:#219a52;
+  --gold:#f5a623;--text:#eee;--dim:#888;
+  --die:70px;--rad:10px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:14px 12px}
+
+h1{font-size:2rem;letter-spacing:5px;color:var(--gold);text-shadow:0 0 18px rgba(245,166,35,.4);margin-bottom:4px}
+.sub{color:var(--dim);font-size:.75rem;letter-spacing:3px;margin-bottom:16px}
+
+/* ── SETUP ── */
+#setup{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:14px;padding-top:40px}
+.plist{width:100%;display:flex;flex-direction:column;gap:8px}
+.prow{display:flex;gap:8px;align-items:center}
+.prow input{flex:1;background:var(--surface);border:1px solid #333;color:var(--text);
+  padding:10px 13px;border-radius:8px;font-size:.95rem;outline:none;transition:border .15s}
+.prow input:focus{border-color:var(--gold)}
+.prow input::placeholder{color:#555}
+.btn-x{background:none;border:1px solid #444;color:#666;width:34px;height:34px;border-radius:6px;
+  cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.btn-x:hover{border-color:var(--accent);color:var(--accent)}
+.row{display:flex;gap:10px;width:100%}
+.btn{padding:11px 22px;border:none;border-radius:9px;font-size:.9rem;font-weight:700;
+  letter-spacing:1px;cursor:pointer;transition:all .15s}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-sec{background:var(--surface);color:var(--text);border:1px solid #444}
+.btn-sec:not(:disabled):hover{border-color:var(--gold);color:var(--gold)}
+.btn-pri{background:var(--gold);color:#1a1a2e}
+.btn-pri:not(:disabled):hover{filter:brightness(1.1)}
+.btn-bank{background:var(--green);color:#1a1a2e}
+.btn-bank:not(:disabled):hover{background:var(--green-dk)}
+
+/* ── GAME ── */
+#game{width:100%;max-width:560px;display:none;flex-direction:column;gap:11px}
+.g-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+
+/* scoreboard */
+#sb{background:var(--surface);border-radius:11px;padding:11px 14px}
+.sb-title{font-size:.6rem;letter-spacing:2px;color:var(--dim);margin-bottom:7px;text-transform:uppercase}
+.sr{display:flex;align-items:center;gap:9px;padding:5px 7px;border-radius:7px;transition:background .2s}
+.sr.active{background:rgba(245,166,35,.12);outline:1px solid rgba(245,166,35,.25)}
+.sr.done{opacity:.45}
+.sr .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:#333}
+.sr.active .dot{background:var(--gold);box-shadow:0 0 5px var(--gold)}
+.sr .sname{flex:1;font-size:.9rem;font-weight:600}
+.sr .spx{font-size:1rem;font-weight:700;color:var(--gold);min-width:52px;text-align:right}
+.badge{font-size:.6rem;padding:2px 6px;border-radius:4px;font-weight:700;letter-spacing:.5px}
+.b-open{background:rgba(233,69,96,.15);color:var(--accent)}
+.b-on{background:rgba(46,204,113,.15);color:var(--green)}
+.b-lead{background:rgba(245,166,35,.2);color:var(--gold)}
+
+/* final banner */
+#fb{display:none;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);
+  border-radius:9px;padding:9px 14px;font-size:.8rem;color:var(--gold);text-align:center}
+#fb.show{display:block}
+
+/* turn info */
+#ti{background:var(--surface);border-radius:11px;padding:13px 15px}
+.tname{font-size:1.15rem;font-weight:700;color:var(--gold);margin-bottom:3px}
+.tscore{font-size:2.1rem;font-weight:900;letter-spacing:-1px;line-height:1}
+.tmeta{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px;font-size:.75rem;color:var(--dim)}
+.ok{color:var(--green)} .no{color:var(--accent)} .carry{color:var(--gold)}
+
+/* zones */
+.zone{background:var(--surface);border-radius:11px;padding:11px 13px;min-height:92px}
+.zlabel{font-size:.58rem;letter-spacing:3px;color:var(--dim);font-weight:700;margin-bottom:9px;text-transform:uppercase}
+.drow{display:flex;flex-wrap:wrap;gap:9px;min-height:70px;align-items:center}
+.empty-msg{color:#3a3a4a;font-size:.8rem;padding:4px}
+
+/* dice */
+.die{width:var(--die);height:var(--die);border-radius:var(--rad);display:flex;align-items:center;
+  justify-content:center;font-size:1.75rem;font-weight:900;cursor:pointer;user-select:none;
+  transition:transform .1s,box-shadow .1s;position:relative;border:2px solid transparent}
+.die:active:not(.locked){transform:scale(.9)}
+.die.roll{background:#fff;color:#1a1a2e;box-shadow:0 3px 10px rgba(0,0,0,.4)}
+.die.roll:hover{transform:translateY(-3px);box-shadow:0 7px 14px rgba(0,0,0,.45)}
+.die.kept{background:var(--green);color:#fff;box-shadow:0 3px 10px rgba(46,204,113,.25)}
+.die.kept:hover{transform:translateY(-3px);box-shadow:0 7px 14px rgba(46,204,113,.35)}
+.die.locked{background:var(--green-dk);color:#fff;cursor:default;opacity:.75;box-shadow:none}
+.die.rolling{animation:pop .38s ease-out}
+@keyframes pop{0%{transform:scale(.7) rotate(-15deg);opacity:.4}
+               55%{transform:scale(1.12) rotate(8deg);opacity:.95}
+               100%{transform:scale(1) rotate(0);opacity:1}}
+.die.no-score{animation:shake .28s ease-out}
+@keyframes shake{0%,100%{transform:translateX(0)}
+                 25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.lockpin{position:absolute;top:3px;right:4px;font-size:.5rem;opacity:.6}
+
+/* actions */
+#acts{display:flex;gap:11px}
+#acts .btn{flex:1;padding:15px;font-size:1rem}
+
+/* overlays */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);
+  align-items:center;justify-content:center;flex-direction:column;
+  gap:18px;z-index:100;text-align:center;padding:28px}
+.ov.show{display:flex}
+.ov-title{font-size:3rem;font-weight:900;letter-spacing:4px;line-height:1}
+.ov-sub{font-size:1rem;color:var(--dim);max-width:300px;line-height:1.5}
+#ov-bust .ov-title{color:var(--accent)}
+#ov-hot .ov-title,.ov-final .ov-title,#ov-win .ov-title{color:var(--gold)}
+
+/* responsive */
+@media(max-width:420px){
+  :root{--die:58px}
+  h1{font-size:1.6rem}
+  .tscore{font-size:1.7rem}
+  .ov-title{font-size:2.2rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ SETUP ═══ -->
+<div id="setup">
+  <h1>MOOSE DICE</h1>
+  <div class="sub">FIRST TO 10,000</div>
+  <div class="plist" id="plist"></div>
+  <div class="row">
+    <button class="btn btn-sec" style="flex:1" onclick="addPlayer()">+ Add Player</button>
+    <button class="btn btn-pri" style="flex:1" id="btn-start" onclick="startGame()" disabled>START</button>
+  </div>
+</div>
+
+<!-- ═══ GAME ═══ -->
+<div id="game">
+  <div class="g-top">
+    <h1 style="font-size:1.3rem;letter-spacing:4px">MOOSE DICE</h1>
+    <button class="btn btn-sec" style="padding:6px 12px;font-size:.75rem" onclick="newGame()">NEW GAME</button>
+  </div>
+  <div id="fb"></div>
+  <div id="sb"></div>
+  <div id="ti">
+    <div class="tname" id="tname"></div>
+    <div style="display:flex;align-items:baseline;gap:10px">
+      <div class="tscore" id="tscore">0</div>
+      <div style="font-size:.72rem;color:var(--dim)">THIS TURN</div>
+    </div>
+    <div class="tmeta" id="tmeta"></div>
+  </div>
+  <div class="zone">
+    <div class="zlabel">Kept</div>
+    <div class="drow" id="kept-row"></div>
+  </div>
+  <div class="zone">
+    <div class="zlabel">Roll Zone</div>
+    <div class="drow" id="roll-row"></div>
+  </div>
+  <div id="acts">
+    <button class="btn btn-sec" id="btn-roll" onclick="doRoll()">ROLL</button>
+    <button class="btn btn-bank" id="btn-bank" onclick="doBank()" disabled>BANK</button>
+  </div>
+</div>
+
+<!-- ═══ OVERLAYS ═══ -->
+<div class="ov" id="ov-bust">
+  <div class="ov-title">BUSTED!</div>
+  <div class="ov-sub" id="bust-msg"></div>
+  <button class="btn btn-sec" onclick="afterBust()">NEXT PLAYER</button>
+</div>
+
+<div class="ov" id="ov-hot">
+  <div class="ov-title">HOT DICE!</div>
+  <div class="ov-sub">All 6 scored! Roll all 6 again — points carry forward.</div>
+  <button class="btn btn-pri" onclick="doHotRoll()">KEEP ROLLING!</button>
+</div>
+
+<div class="ov" id="ov-final">
+  <div class="ov-title ov-final">10,000!</div>
+  <div class="ov-sub" id="final-msg"></div>
+  <button class="btn btn-pri" onclick="dismissFinal()">LET'S GO</button>
+</div>
+
+<div class="ov" id="ov-win">
+  <div class="ov-title">WINNER!</div>
+  <div class="ov-sub" id="win-msg"></div>
+  <button class="btn btn-pri" onclick="newGame()">PLAY AGAIN</button>
+</div>
+
+<script>
+// ════════════════════════════════
+// SCORING
+// ════════════════════════════════
+function scoreSet(vals) {
+  if (!vals.length) return 0;
+  const c = Array(7).fill(0);
+  vals.forEach(v => c[v]++);
+
+  // Straight
+  if (vals.length === 6 && c.slice(1).every(x => x === 1)) return 1500;
+
+  // 3 pairs (exactly 6 dice with three pairs)
+  if (vals.length === 6 && c.filter(x => x === 2).length === 3) return 1000;
+
+  let score = 0;
+  for (let f = 1; f <= 6; f++) {
+    const n = c[f];
+    if (n >= 3) {
+      let base = f === 1 ? 1000 : f * 100;
+      for (let i = 3; i < n; i++) base *= 2; // 4th+ doubles each time
+      score += base;
+    } else {
+      if (f === 1) score += n * 100;
+      if (f === 5) score += n * 50;
+    }
+  }
+  return score;
+}
+
+function scoreDesc(vals) {
+  if (!vals.length) return '';
+  const c = Array(7).fill(0);
+  vals.forEach(v => c[v]++);
+  if (vals.length === 6 && c.slice(1).every(x => x === 1)) return 'Straight = 1,500';
+  if (vals.length === 6 && c.filter(x => x === 2).length === 3) return '3 Pairs = 1,000';
+  const parts = [];
+  for (let f = 1; f <= 6; f++) {
+    const n = c[f];
+    if (n >= 3) {
+      let base = f === 1 ? 1000 : f * 100;
+      for (let i = 3; i < n; i++) base *= 2;
+      parts.push(`${n} ${f}s = ${base.toLocaleString()}`);
+    } else {
+      if (f === 1 && n) parts.push(`${n} one${n>1?'s':''} = ${n*100}`);
+      if (f === 5 && n) parts.push(`${n} five${n>1?'s':''} = ${n*50}`);
+    }
+  }
+  return parts.join(' · ') || '';
+}
+
+// ════════════════════════════════
+// STATE
+// ════════════════════════════════
+const S = {
+  players: [],          // [{name, score, onBoard}]
+  cur: 0,               // current player index
+  dice: [],             // [{id, val, kept, locked, rolling}]
+  rolled: false,        // has this turn had at least one roll?
+  hotRolling: false,    // true during the 80ms auto-roll window after hot dice
+  carry: 0,             // hot-dice score carryover
+  finalRound: false,
+  triggerIdx: null,
+  done: new Set(),      // players who completed their final turn
+};
+
+function mkDice() {
+  return Array.from({length:6}, (_,i) => ({id:i, val:null, kept:false, locked:false, rolling:false}));
+}
+
+// ════════════════════════════════
+// SETUP
+// ════════════════════════════════
+function renderSetup() {
+  const el = document.getElementById('plist');
+  el.innerHTML = S.players.map((p,i) => `
+    <div class="prow">
+      <input type="text" placeholder="Player ${i+1}" value="${esc(p.name)}" maxlength="18"
+        oninput="S.players[${i}].name=this.value;chkStart()"
+        onkeydown="if(event.key==='Enter')document.getElementById('btn-start').click()"/>
+      ${S.players.length > 2
+        ? `<button class="btn-x" onclick="rmPlayer(${i})">×</button>`
+        : ''}
+    </div>`).join('');
+  chkStart();
+}
+
+function chkStart() {
+  document.getElementById('btn-start').disabled =
+    !S.players.every(p => p.name.trim());
+}
+
+function addPlayer() {
+  if (S.players.length >= 8) return;
+  S.players.push({name:'', score:0, onBoard:false});
+  renderSetup();
+  setTimeout(() => {
+    const ins = document.querySelectorAll('#plist input');
+    ins[ins.length-1].focus();
+  }, 40);
+}
+
+function rmPlayer(i) {
+  if (S.players.length <= 2) return;
+  S.players.splice(i, 1);
+  renderSetup();
+}
+
+function startGame() {
+  S.players.forEach(p => { p.name=p.name.trim(); p.score=0; p.onBoard=false; });
+  S.cur=0; S.finalRound=false; S.triggerIdx=null; S.done=new Set();
+  document.getElementById('setup').style.display='none';
+  document.getElementById('game').style.display='flex';
+  beginTurn();
+}
+
+function newGame() {
+  hideOvs();
+  document.getElementById('game').style.display='none';
+  document.getElementById('setup').style.display='flex';
+  S.players.forEach(p => { p.score=0; p.onBoard=false; });
+  S.cur=0; S.finalRound=false; S.triggerIdx=null; S.done=new Set();
+  renderSetup();
+}
+
+// ════════════════════════════════
+// TURN FLOW
+// ════════════════════════════════
+function beginTurn() {
+  S.dice = mkDice();
+  S.rolled = false;
+  S.hotRolling = false;
+  S.carry = 0;
+  hideOvs();
+  render();
+}
+
+function doRoll() {
+  const toRoll = S.dice.filter(d => !d.kept);
+  if (!toRoll.length) return;
+
+  // Lock all currently-kept dice (from this roll, now becoming "previous")
+  S.dice.forEach(d => { if (d.kept) d.locked = true; });
+
+  S.rolled = true;
+
+  // Assign new values and flag animation
+  toRoll.forEach(d => { d.val = rnd(); d.rolling = true; });
+  render();
+
+  setTimeout(() => {
+    S.dice.forEach(d => d.rolling = false);
+
+    // Bust check: can ANY of the newly rolled dice contribute to score?
+    const lockedVals = S.dice.filter(d => d.locked).map(d => d.val);
+    const rolledVals = S.dice.filter(d => !d.kept).map(d => d.val);
+    const combined   = [...lockedVals, ...rolledVals];
+
+    if (scoreSet(combined) <= scoreSet(lockedVals)) {
+      // BUST — no new scoring possible
+      document.getElementById('bust-msg').textContent =
+        `${S.players[S.cur].name} rolled no scoring dice. Turn points lost!`;
+      document.getElementById('ov-bust').classList.add('show');
+    }
+    render();
+  }, 420);
+}
+
+// Returns true if this die can legally be moved to the kept zone.
+// Rule: the kept set must contain at least 1 scoring die. Once that's satisfied,
+// any die can be added (e.g. keep a 6 alongside scoring dice, chasing pairs/triples).
+// If the kept set has no scoring dice yet, this die must contribute to score
+// in the context of all current dice (locked + kept + full roll zone).
+function canKeepDie(die) {
+  // If the kept set already has scoring dice, any die is allowed
+  const keptVals = S.dice.filter(d => d.kept).map(d => d.val);
+  if (scoreSet(keptVals) > 0) return true;
+
+  // No scoring dice yet — this die must contribute in the full roll context
+  const lockedVals      = S.dice.filter(d => d.locked).map(d => d.val);
+  const unlockedKeptVals= S.dice.filter(d => d.kept && !d.locked).map(d => d.val);
+  const rollVals        = S.dice.filter(d => !d.kept).map(d => d.val); // includes die
+  const rollValsWithout = S.dice.filter(d => !d.kept && d.id !== die.id).map(d => d.val);
+  const allVals    = [...lockedVals, ...unlockedKeptVals, ...rollVals];
+  const withoutDie = [...lockedVals, ...unlockedKeptVals, ...rollValsWithout];
+  return scoreSet(allVals) > scoreSet(withoutDie);
+}
+
+function shakeEl(id) {
+  const el = document.getElementById('d' + id);
+  if (!el) return;
+  el.classList.remove('no-score');
+  void el.offsetWidth; // reflow to restart animation
+  el.classList.add('no-score');
+  setTimeout(() => el.classList.remove('no-score'), 320);
+}
+
+function toggleDie(id) {
+  if (!S.rolled) return;
+  const d = S.dice.find(x => x.id === id);
+  if (!d || d.rolling || d.locked) return;
+
+  if (!d.kept) {
+    // Validate: die must contribute to scoring in the current roll context
+    if (!canKeepDie(d)) { shakeEl(id); return; }
+    d.kept = true;
+    // Check hot dice: all 6 now kept
+    if (S.dice.every(x => x.kept)) {
+      render();
+      showHot();
+      return;
+    }
+  } else {
+    // Pick back up — must leave ≥1 keeper
+    const keptCount = S.dice.filter(x => x.kept).length;
+    if (keptCount <= 1) return;
+    d.kept = false;
+  }
+  render();
+}
+
+function doBank() {
+  const ts = turnScore();
+  const p  = S.players[S.cur];
+  if (!bankOk(p, ts)) return;
+  p.score += ts;
+  p.onBoard = true;
+  completeTurn();
+}
+
+function afterBust() {
+  S.carry = 0; // lose all turn points
+  completeTurn();
+}
+
+function doHotRoll() {
+  const kv = S.dice.filter(d => d.kept).map(d => d.val);
+  S.carry += scoreSet(kv);
+  S.dice = mkDice();
+  S.rolled = false;
+  S.hotRolling = true; // disable ROLL during the auto-roll window
+  hideOvs();
+  render();
+  setTimeout(() => { S.hotRolling = false; doRoll(); }, 80);
+}
+
+function completeTurn() {
+  const p = S.players[S.cur];
+  if (!S.finalRound && p.score >= 10000) {
+    S.finalRound  = true;
+    S.triggerIdx  = S.cur;
+    S.done.add(S.cur);
+    document.getElementById('final-msg').textContent =
+      `${p.name} reached ${p.score.toLocaleString()}! Every other player gets one final turn.`;
+    document.getElementById('ov-final').classList.add('show');
+    return; // wait for player to dismiss
+  }
+  if (S.finalRound) S.done.add(S.cur);
+  advance();
+}
+
+function dismissFinal() {
+  hideOvs();
+  advance();
+}
+
+function advance() {
+  const n = S.players.length;
+  let next = (S.cur + 1) % n;
+  if (S.finalRound) {
+    let steps = 0;
+    while (S.done.has(next) && steps < n) { next = (next+1) % n; steps++; }
+    if (steps >= n || S.done.size >= n) { endGame(); return; }
+  }
+  S.cur = next;
+  beginTurn();
+}
+
+function endGame() {
+  hideOvs();
+  const ranked  = [...S.players].sort((a,b) => b.score - a.score);
+  const topScore = ranked[0].score;
+  const winners  = ranked.filter(p => p.score === topScore);
+  const titleEl  = document.getElementById('ov-win').querySelector('.ov-title');
+  titleEl.textContent = winners.length > 1 ? 'TIE!' : 'WINNER!';
+  document.getElementById('win-msg').innerHTML =
+    ranked.map((p,i) => `${['🥇','🥈','🥉'][i]||`${i+1}.`} ${esc(p.name)}: ${p.score.toLocaleString()}`).join('<br>');
+  document.getElementById('ov-win').classList.add('show');
+}
+
+function showHot() {
+  document.getElementById('ov-hot').classList.add('show');
+}
+
+// ════════════════════════════════
+// HELPERS
+// ════════════════════════════════
+function turnScore() {
+  const kv = S.dice.filter(d => d.kept).map(d => d.val);
+  return S.carry + scoreSet(kv);
+}
+
+function bankOk(p, ts) {
+  if (!p.onBoard) return ts >= 500;
+  return ts >= 350;
+}
+
+function rnd() { return Math.floor(Math.random() * 6) + 1; }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function hideOvs() { document.querySelectorAll('.ov').forEach(o => o.classList.remove('show')); }
+
+// ════════════════════════════════
+// RENDER
+// ════════════════════════════════
+function render() {
+  const p  = S.players[S.cur];
+  const ts = turnScore();
+  const kv = S.dice.filter(d => d.kept).map(d => d.val);
+
+  // Turn info
+  document.getElementById('tname').textContent = p.name;
+  document.getElementById('tscore').textContent = ts.toLocaleString();
+
+  const desc = scoreDesc(kv);
+  let meta = '';
+  if (S.rolled) {
+    if (!p.onBoard) {
+      meta += ts >= 500
+        ? `<span class="ok">✓ 500 to open met</span>`
+        : `<span class="no">${500-ts} more to open</span>`;
+    } else {
+      meta += ts >= 350
+        ? `<span class="ok">✓ Can bank</span>`
+        : `<span class="no">${350-ts} more to bank</span>`;
+    }
+  }
+  if (desc) meta += `<span>${desc}</span>`;
+  if (S.carry) meta += `<span class="carry">+${S.carry.toLocaleString()} carried</span>`;
+  document.getElementById('tmeta').innerHTML = meta;
+
+  // Scoreboard
+  const sbEl = document.getElementById('sb');
+  sbEl.innerHTML = '<div class="sb-title">Scoreboard</div>' +
+    S.players.map((pl,i) => {
+      const isActive = i === S.cur;
+      const isDone   = S.finalRound && S.done.has(i) && !isActive;
+      let badge, bcls;
+      if (pl.score >= 10000) { badge='LEADS'; bcls='b-lead'; }
+      else if (pl.onBoard)   { badge='ON';    bcls='b-on'; }
+      else                   { badge='OPEN';  bcls='b-open'; }
+      return `<div class="sr ${isActive?'active':''} ${isDone?'done':''}">
+        <div class="dot"></div>
+        <div class="sname">${esc(pl.name)}</div>
+        <span class="badge ${bcls}">${badge}</span>
+        <div class="spx">${pl.score.toLocaleString()}</div>
+      </div>`;
+    }).join('');
+
+  // Final round banner
+  const fb = document.getElementById('fb');
+  if (S.finalRound) {
+    fb.textContent = `FINAL ROUND — ${S.players[S.triggerIdx].name} hit 10,000! Final turns in progress.`;
+    fb.classList.add('show');
+  } else { fb.classList.remove('show'); }
+
+  // Dice
+  const kept = S.dice.filter(d => d.kept);
+  const roll  = S.dice.filter(d => !d.kept);
+
+  document.getElementById('kept-row').innerHTML = kept.length
+    ? kept.map(dieSVG).join('')
+    : '<span class="empty-msg">No dice kept</span>';
+
+  document.getElementById('roll-row').innerHTML = roll.length
+    ? roll.map(dieSVG).join('')
+    : '<span class="empty-msg">—</span>';
+
+  // Buttons
+  const hasRollable = roll.length > 0;
+  const hasKeeper   = S.dice.some(d => d.kept);
+  const canRoll     = !S.hotRolling && (S.rolled ? (hasRollable && hasKeeper) : hasRollable);
+  const btnRoll = document.getElementById('btn-roll');
+  btnRoll.disabled = !canRoll;
+  btnRoll.textContent = !S.rolled ? 'ROLL' : `ROLL (${roll.length})`;
+
+  document.getElementById('btn-bank').disabled =
+    !(S.rolled && kept.length && bankOk(p, ts));
+}
+
+function dieSVG(d) {
+  let cls = 'die';
+  if (!d.kept)       cls += ' roll';
+  else if (d.locked) cls += ' locked';
+  else               cls += ' kept';
+  if (d.rolling)     cls += ' rolling';
+  const pin = d.locked ? '<span class="lockpin">🔒</span>' : '';
+  const val  = d.val !== null ? d.val : '';
+  return `<div id="d${d.id}" class="${cls}" onclick="toggleDie(${d.id})">${pin}${val}</div>`;
+}
+
+// ════════════════════════════════
+// INIT
+// ════════════════════════════════
+S.players = [{name:'',score:0,onBoard:false},{name:'',score:0,onBoard:false}];
+renderSetup();
+</script>
+</body>
+</html>
