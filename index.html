@@ -494,7 +494,7 @@ function bankOk(p, ts) {
   return ts >= 350;
 }
 
-function rnd() { return Math.ceil(Math.random() * 6); }
+function rnd() { return Math.floor(Math.random() * 6) + 1; }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function hideOvs() { document.querySelectorAll('.ov').forEach(o => o.classList.remove('show')); }
 
