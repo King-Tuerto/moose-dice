@@ -719,8 +719,7 @@ function toggleDie(id) {
       return;
     }
   } else {
-    const keptCount = S.dice.filter(x => x.kept).length;
-    if (keptCount <= 1) return;
+    // Un-keep: always allowed for non-locked dice — player can undo any accidental tap
     d.kept = false;
   }
   render();
