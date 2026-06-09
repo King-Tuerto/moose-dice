@@ -650,9 +650,10 @@ function doRoll() {
 function canKeepDie(die) {
   const locked  = S.dice.filter(d => d.locked).map(d => d.val);
   const newKept = S.dice.filter(d => d.kept && !d.locked).map(d => d.val);
+  // If this roll already has scoring dice kept, allow keeping any die (chase triples)
+  if (scoreBatched(locked, newKept) > scoreSet(locked)) return true;
   const rollAll     = S.dice.filter(d => !d.kept).map(d => d.val);
   const rollWithout = S.dice.filter(d => !d.kept && d.id !== die.id).map(d => d.val);
-  // Does keeping this die (given potential full-roll context) add to the score?
   const withAll    = scoreBatched(locked, [...newKept, ...rollAll]);
   const withoutDie = scoreBatched(locked, [...newKept, ...rollWithout]);
   return withAll > withoutDie;
