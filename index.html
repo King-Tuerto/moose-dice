@@ -462,6 +462,24 @@ function scoreDesc(vals) {
   return parts.join(' · ') || '';
 }
 
+// True only when every die in the 6-die set contributes to a scoring combination.
+// Used to decide whether a hot roll fires (dead-weight dice like [2,3,6] locked
+// while chasing a straight disqualify the hot roll).
+function allDiceScore(vals) {
+  if (vals.length !== 6) return false;
+  const c = Array(7).fill(0);
+  vals.forEach(v => c[v]++);
+  if (c.slice(1).every(x => x === 1)) return true; // straight
+  if (c.slice(1).every(x => x % 2 === 0) && Math.max(...c.slice(1)) <= 4) return true; // 3 pairs
+  for (let f = 1; f <= 6; f++) {
+    if (!c[f]) continue;
+    if (c[f] >= 3) continue;          // triple or better → contributes
+    if (f === 1 || f === 5) continue;  // singles → contribute
+    return false;                      // 2,3,4,6 with count < 3 = dead weight
+  }
+  return true;
+}
+
 // Order-aware scoring: locked dice from prior rolls + newly kept dice this roll.
 // Triples only combine across batches if locked already has 3+ of that face.
 function scoreBatched(lockedVals, newKeptVals) {
@@ -684,7 +702,11 @@ function toggleDie(id) {
   if (!d.kept) {
     if (!canKeepDie(d)) { shakeEl(id); return; }
     d.kept = true;
-    if (S.dice.every(x => x.kept)) { render(); showHot(); return; }
+    if (S.dice.every(x => x.kept)) {
+      render();
+      if (allDiceScore(S.dice.map(x => x.val))) { showHot(); }
+      return;
+    }
   } else {
     const keptCount = S.dice.filter(x => x.kept).length;
     if (keptCount <= 1) return;
@@ -789,7 +811,12 @@ function aiTakeTurn() {
     const die = S.dice.find(d => d.id === keepIds[idx]);
     if (die && !die.kept) {
       die.kept = true;
-      if (S.dice.every(x => x.kept)) { render(); showHot(); return; }
+      if (S.dice.every(x => x.kept)) {
+        render();
+        if (allDiceScore(S.dice.map(x => x.val))) { showHot(); }
+        else { setTimeout(() => { S.aiActive = false; aiDecide(player); }, AI_SPD.decide); }
+        return;
+      }
       render();
     }
     idx++;
@@ -939,6 +966,11 @@ function turnScore() {
 }
 
 function bankOk(p, ts) {
+  // When all 6 dice are locked and no hot roll triggered (dead-weight dice locked
+  // while chasing a combo), allow banking whatever was scored — player is out of dice.
+  if (S.rolled && S.dice.every(d => d.kept) && !allDiceScore(S.dice.map(d => d.val))) {
+    return ts > 0;
+  }
   if (!p.onBoard) return ts >= 500;
   return ts >= 350;
 }
