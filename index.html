@@ -1018,8 +1018,11 @@ function render() {
   const isRolling    = S.dice.some(d => d.rolling);
   const hasRollable  = roll.length > 0;
   const hasNewKeeper = S.dice.some(d => d.kept && !d.locked);
+  const lockedVals2 = S.dice.filter(d => d.locked).map(d => d.val);
+  const newKeptVals2 = S.dice.filter(d => d.kept && !d.locked).map(d => d.val);
+  const newKeptScores = scoreBatched(lockedVals2, newKeptVals2) > scoreSet(lockedVals2);
   const canRoll = !isAI && !S.hotRolling && !S.aiActive && !isRolling &&
-                  (S.rolled ? (hasRollable && hasNewKeeper) : hasRollable);
+                  (S.rolled ? (hasRollable && hasNewKeeper && newKeptScores) : hasRollable);
   const btnRoll = document.getElementById('btn-roll');
   btnRoll.disabled = !canRoll;
   btnRoll.textContent = !S.rolled ? 'ROLL' : `ROLL (${roll.length})`;
