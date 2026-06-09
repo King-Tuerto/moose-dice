@@ -471,7 +471,11 @@ function scoreBatched(lockedVals, newKeptVals) {
   const combined = [...lockedVals];
   const indep    = [];
   newKeptVals.forEach(v => { lc[v] >= 3 ? combined.push(v) : indep.push(v); });
-  return scoreSet(combined) + scoreSet(indep);
+  let score = scoreSet(combined) + scoreSet(indep);
+  // If all 6 dice are in play, check the full set for straight/3-pairs bonus
+  const full = [...lockedVals, ...newKeptVals];
+  if (full.length === 6) score = Math.max(score, scoreSet(full));
+  return score;
 }
 
 // ════════════════════════════════
