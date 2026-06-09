@@ -704,7 +704,18 @@ function toggleDie(id) {
     d.kept = true;
     if (S.dice.every(x => x.kept)) {
       render();
-      if (allDiceScore(S.dice.map(x => x.val))) { showHot(); }
+      const allVals = S.dice.map(x => x.val);
+      if (allDiceScore(allVals)) {
+        showHot();
+      } else {
+        document.getElementById('bust-msg').textContent =
+          `Not all dice contribute to the score — turn lost!`;
+        document.getElementById('bust-dice').innerHTML =
+          S.dice.map(dx =>
+            `<div style="width:58px;height:58px;background:#fff;color:#1a1a2e;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:900">${dx.val}</div>`
+          ).join('');
+        document.getElementById('ov-bust').classList.add('show');
+      }
       return;
     }
   } else {
@@ -813,8 +824,11 @@ function aiTakeTurn() {
       die.kept = true;
       if (S.dice.every(x => x.kept)) {
         render();
-        if (allDiceScore(S.dice.map(x => x.val))) { showHot(); }
-        else { setTimeout(() => { S.aiActive = false; aiDecide(player); }, AI_SPD.decide); }
+        if (allDiceScore(S.dice.map(x => x.val))) {
+          showHot();
+        } else {
+          setTimeout(() => { hideOvs(); afterBust(); }, 3000);
+        }
         return;
       }
       render();
@@ -966,11 +980,6 @@ function turnScore() {
 }
 
 function bankOk(p, ts) {
-  // When all 6 dice are locked and no hot roll triggered (dead-weight dice locked
-  // while chasing a combo), allow banking whatever was scored — player is out of dice.
-  if (S.rolled && S.dice.every(d => d.kept) && !allDiceScore(S.dice.map(d => d.val))) {
-    return ts > 0;
-  }
   if (!p.onBoard) return ts >= 500;
   return ts >= 350;
 }
