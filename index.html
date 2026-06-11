@@ -480,20 +480,52 @@ function allDiceScore(vals) {
   return true;
 }
 
-// Order-aware scoring: locked dice from prior rolls + newly kept dice this roll.
-// Triples only combine across batches if locked already has 3+ of that face.
+// Triple-rule-aware scorer.
+// et = effectiveTripleAchieved {face: true} — only faces that had 3+ in ONE roll
+// get the triple/doubling bonus; all others score as singles.
+function scoreWithTripleRule(tc, et) {
+  let score = 0;
+  for (let f = 1; f <= 6; f++) {
+    const n = tc[f];
+    if (!n) continue;
+    if (et[f] && n >= 3) {
+      let base = f === 1 ? 1000 : f * 100;
+      for (let i = 3; i < n; i++) base *= 2;
+      score += base;
+    } else {
+      if (f === 1) score += n * 100;
+      if (f === 5) score += n * 50;
+    }
+  }
+  return score;
+}
+
+// Order-aware scoring. A triple/doubling bonus ONLY applies when 3+ of a face
+// appeared in a single roll (tracked in S.tripleAchieved). Picking up a face
+// one die at a time across rolls = singles only. The triple can come from any
+// roll in the turn — a 2 kept in roll 1, then three 2s in roll 2 = 4 twos = 400.
 function scoreBatched(lockedVals, newKeptVals) {
-  if (!newKeptVals.length) return scoreSet(lockedVals);
   const lc = Array(7).fill(0);
   lockedVals.forEach(v => lc[v]++);
-  const combined = [...lockedVals];
-  const indep    = [];
-  newKeptVals.forEach(v => { lc[v] >= 3 ? combined.push(v) : indep.push(v); });
-  let score = scoreSet(combined) + scoreSet(indep);
-  // If all 6 dice are in play, check the full set for straight/3-pairs bonus
-  const full = [...lockedVals, ...newKeptVals];
-  if (full.length === 6) score = Math.max(score, scoreSet(full));
-  return score;
+  const nc = Array(7).fill(0);
+  newKeptVals.forEach(v => nc[v]++);
+
+  // Effective triples: previously achieved + any triple in THIS newKept batch
+  const et = Object.assign({}, S.tripleAchieved || {});
+  for (let f = 1; f <= 6; f++) { if (nc[f] >= 3) et[f] = true; }
+
+  // Total counts across all dice in play
+  const tc = Array(7).fill(0);
+  for (let f = 1; f <= 6; f++) tc[f] = lc[f] + nc[f];
+
+  // Full-set bonus: straight or three-pairs
+  const all = [...lockedVals, ...newKeptVals];
+  if (all.length === 6) {
+    if (tc.slice(1).every(x => x === 1)) return 1500; // straight
+    if (tc.slice(1).every(x => x % 2 === 0) && Math.max(...tc.slice(1)) <= 4)
+      return Math.max(1000, scoreWithTripleRule(tc, et)); // three pairs
+  }
+  return scoreWithTripleRule(tc, et);
 }
 
 // ════════════════════════════════
@@ -506,6 +538,7 @@ const S = {
   rolled: false,
   hotRolling: false,
   carry: 0,
+  tripleAchieved: {},
   aiActive: false,
   coach: false,
   finalRound: false,
@@ -626,6 +659,7 @@ function beginTurn() {
   S.rolled = false;
   S.hotRolling = false;
   S.carry = 0;
+  S.tripleAchieved = {};
   S.aiActive = false;
   hideOvs();
   render();
@@ -639,6 +673,11 @@ function beginTurn() {
 function doRoll() {
   const toRoll = S.dice.filter(d => !d.kept);
   if (!toRoll.length) return;
+  // Detect triples in the batch being locked now (dice kept from previous roll)
+  const beingLocked = S.dice.filter(d => d.kept && !d.locked);
+  const blc = Array(7).fill(0);
+  beingLocked.forEach(d => blc[d.val]++);
+  for (let f = 1; f <= 6; f++) { if (blc[f] >= 3) S.tripleAchieved[f] = true; }
   S.dice.forEach(d => { if (d.kept) d.locked = true; });
   S.rolled = true;
   toRoll.forEach(d => { d.val = rnd(); d.rolling = true; });
@@ -650,7 +689,7 @@ function doRoll() {
     const rolledVals = S.dice.filter(d => !d.kept).map(d => d.val);
     const combined   = [...lockedVals, ...rolledVals];
 
-    if (scoreBatched(lockedVals, rolledVals) <= scoreSet(lockedVals)) {
+    if (scoreBatched(lockedVals, rolledVals) <= scoreBatched(lockedVals, [])) {
       document.getElementById('bust-msg').textContent =
         `${S.players[S.cur].name} rolled no scoring dice. Turn points lost!`;
       document.getElementById('bust-dice').innerHTML =
@@ -673,11 +712,12 @@ function canKeepDie(die) {
   const locked  = S.dice.filter(d => d.locked).map(d => d.val);
   const newKept = S.dice.filter(d => d.kept && !d.locked).map(d => d.val);
   // If this roll already has scoring dice kept, allow keeping any die
-  if (scoreBatched(locked, newKept) > scoreSet(locked)) return true;
+  const lockedBase = scoreBatched(locked, []);
+  if (scoreBatched(locked, newKept) > lockedBase) return true;
   // If any die in the current roll is a scorer (e.g. a 5 in [3,4,4,5,6,6]),
   // allow keeping any die — player can chase pairs, straights, etc.
   const rollVals = S.dice.filter(d => !d.locked).map(d => d.val);
-  const rollHasScorer = rollVals.some(v => scoreBatched(locked, [v]) > scoreSet(locked));
+  const rollHasScorer = rollVals.some(v => scoreBatched(locked, [v]) > lockedBase);
   if (rollHasScorer) return true;
   const rollAll     = S.dice.filter(d => !d.kept).map(d => d.val);
   const rollWithout = S.dice.filter(d => !d.kept && d.id !== die.id).map(d => d.val);
@@ -737,12 +777,14 @@ function doBank() {
 
 function afterBust() {
   S.carry = 0;
+  S.tripleAchieved = {};
   S.aiActive = false;
   completeTurn();
 }
 
 function doHotRoll() {
   S.carry = turnScore();
+  S.tripleAchieved = {};   // fresh set of dice = fresh triple tracking
   S.dice = mkDice();
   S.rolled = false;
   S.hotRolling = true;
@@ -1064,7 +1106,7 @@ function render() {
   const hasNewKeeper = S.dice.some(d => d.kept && !d.locked);
   const lockedVals2 = S.dice.filter(d => d.locked).map(d => d.val);
   const newKeptVals2 = S.dice.filter(d => d.kept && !d.locked).map(d => d.val);
-  const newKeptScores = scoreBatched(lockedVals2, newKeptVals2) > scoreSet(lockedVals2);
+  const newKeptScores = scoreBatched(lockedVals2, newKeptVals2) > scoreBatched(lockedVals2, []);
   const canRoll = !isAI && !S.hotRolling && !S.aiActive && !isRolling &&
                   (S.rolled ? (hasRollable && hasNewKeeper && newKeptScores) : hasRollable);
   const btnRoll = document.getElementById('btn-roll');
